@@ -13,6 +13,7 @@ import type {
 import { t, type Lang } from "@/lib/i18n";
 import KpiStrip from "./KpiStrip";
 import AiBanner from "./AiBanner";
+import SummaryTab from "./SummaryTab";
 import LeadsTab from "./LeadsTab";
 import AgentsTab from "./AgentsTab";
 import InsightsTab from "./InsightsTab";
@@ -37,14 +38,15 @@ type Props = {
   matrix: AgentCampaignCell[];
 };
 
-type TabKey = "alerts" | "leads" | "agents" | "insights";
+type TabKey = "summary" | "alerts" | "leads" | "agents" | "insights";
 type Theme = "light" | "dark";
 
 const NAV = [
-  { key: "alerts"   as const, icon: Bell,       labelEs: "Alertas", labelEn: "Alerts"   },
-  { key: "leads"    as const, icon: Target,     labelEs: "Leads",   labelEn: "Leads"    },
-  { key: "agents"   as const, icon: Users,      labelEs: "Agentes", labelEn: "Agents"   },
-  { key: "insights" as const, icon: BarChart3,  labelEs: "Análisis",labelEn: "Insights" },
+  { key: "summary"  as const, icon: BarChart3,  labelEs: "Resumen",  labelEn: "Summary"  },
+  { key: "alerts"   as const, icon: Bell,       labelEs: "Alertas",  labelEn: "Alerts"   },
+  { key: "leads"    as const, icon: Target,     labelEs: "Leads",    labelEn: "Leads"    },
+  { key: "agents"   as const, icon: Users,      labelEs: "Agentes",  labelEn: "Agents"   },
+  { key: "insights" as const, icon: BarChart3,  labelEs: "Análisis", labelEn: "Insights" },
 ];
 
 export default function Dashboard(props: Props) {
@@ -56,7 +58,7 @@ export default function Dashboard(props: Props) {
   const [lang, setLang] = useState<Lang>(props.initialLang);
   const [tab, setTabState] = useState<TabKey>(() => {
     const tabParam = searchParams.get("tab") as TabKey | null;
-    return tabParam && ["alerts", "leads", "agents", "insights"].includes(tabParam) ? tabParam : "alerts";
+    return tabParam && ["summary", "alerts", "leads", "agents", "insights"].includes(tabParam) ? tabParam : "summary";
   });
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "dark";
@@ -161,6 +163,7 @@ export default function Dashboard(props: Props) {
             </div>
 
             <h1 className="hidden md:flex text-base font-medium text-zinc-700 dark:text-zinc-200 items-center gap-2">
+              {tab === "summary"  && <><BarChart3 className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Resumen" : "Summary"}</>}
               {tab === "alerts"   && <><Bell className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Alertas" : "Alerts"}</>}
               {tab === "leads"    && <><Target className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Leads" : "Leads"}</>}
               {tab === "agents"   && <><Users className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Agentes" : "Agents"}</>}
@@ -238,8 +241,9 @@ export default function Dashboard(props: Props) {
         </header>
 
         <main className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-          <KpiStrip lang={lang} leads={props.leads} agents={props.agents} salesTrend={props.salesTrend} forecast={props.forecast} range={props.initialRange} />
-          {tab !== "insights" && tab !== "alerts" && <AiBanner lang={lang} weekly={props.weekly} compact />}
+          {tab !== "insights" && tab !== "alerts" && tab !== "summary" && <KpiStrip lang={lang} leads={props.leads} agents={props.agents} salesTrend={props.salesTrend} forecast={props.forecast} range={props.initialRange} />}
+          {tab !== "insights" && tab !== "alerts" && tab !== "summary" && <AiBanner lang={lang} weekly={props.weekly} compact />}
+          {tab === "summary"  && <SummaryTab lang={lang} salesTrend={props.salesTrend} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} />}
           {tab === "alerts"   && <AlertsTab lang={lang} alerts={props.alerts} onJump={setTab} />}
           {tab === "leads"    && <LeadsTab lang={lang} leads={props.leads} />}
           {tab === "agents"   && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} />}
