@@ -58,16 +58,17 @@ export default function Dashboard(props: Props) {
     const tabParam = searchParams.get("tab") as TabKey | null;
     return tabParam && ["alerts", "leads", "agents", "insights"].includes(tabParam) ? tabParam : "alerts";
   });
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === "undefined") return "dark";
+    return (localStorage.getItem("theme") as Theme) || "dark";
+  });
   const tr = t[lang];
   const urgentCount = props.alerts.filter(a => a.severity === "high").length;
 
-  // Init theme from localStorage
+  // Apply theme class on mount and when theme changes
   useEffect(() => {
-    const saved = (localStorage.getItem("theme") as Theme) || "dark";
-    setTheme(saved);
-    document.documentElement.classList.toggle("dark", saved === "dark");
-  }, []);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
 
   const toggleTheme = () => {
     const next: Theme = theme === "dark" ? "light" : "dark";
