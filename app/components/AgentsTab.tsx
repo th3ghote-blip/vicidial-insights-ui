@@ -192,7 +192,7 @@ export default function AgentsTab({
           return (
             <div
               key={a.user}
-              className="group rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-gradient-to-br dark:from-zinc-900/40 dark:to-zinc-900/10 p-3 sm:p-4 hover:border-zinc-300 dark:hover:border-zinc-700 dark:hover:from-zinc-900/60 transition-all shadow-sm dark:shadow-none"
+              className="group rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-3 sm:p-4 hover:border-zinc-300 dark:hover:border-zinc-700 dark:hover:bg-zinc-900/60 transition-all shadow-sm dark:shadow-none"
             >
               {/* Header row */}
               <div className="flex items-start gap-2.5 sm:gap-3 mb-3">

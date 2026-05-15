@@ -82,7 +82,7 @@ export default function Dashboard(props: Props) {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex">
       {/* ────────── Sidebar ────────── */}
-      <aside className="hidden md:flex md:flex-col w-60 border-r border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-gradient-to-b dark:from-zinc-950 dark:to-zinc-900/40 sticky top-0 h-screen">
+      <aside className="hidden md:flex md:flex-col w-60 border-r border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-950 sticky top-0 h-screen">
         <div className="px-5 pt-5 pb-6 border-b border-zinc-200 dark:border-zinc-800/60">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">

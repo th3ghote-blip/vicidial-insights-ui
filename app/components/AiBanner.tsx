@@ -10,7 +10,7 @@ export default function AiBanner({ lang, weekly, compact = false }: { lang: Lang
   const text = compact ? cleaned.split("\n").filter(Boolean).slice(0, 2).join(" ") : cleaned;
 
   return (
-    <div className="rounded-xl border border-emerald-500/20 bg-gradient-to-br from-emerald-50 via-white to-white dark:from-emerald-900/15 dark:via-zinc-900 dark:to-zinc-900 p-4">
+    <div className="rounded-xl border border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/15 p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">

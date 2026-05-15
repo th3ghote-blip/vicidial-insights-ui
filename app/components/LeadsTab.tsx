@@ -151,7 +151,7 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
         </div>
 
         {/* Detail panel */}
-        <aside className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-gradient-to-b dark:from-zinc-900/50 dark:to-zinc-900/20 p-5 h-fit lg:sticky lg:top-32 shadow-sm dark:shadow-none">
+        <aside className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-5 h-fit lg:sticky lg:top-32 shadow-sm dark:shadow-none">
           {selected ? <LeadDetail lead={selected} lang={lang} onClose={() => setSelected(null)} /> : (
             <div className="text-sm text-zinc-500 py-12 text-center">
               <Users className="h-8 w-8 text-zinc-300 dark:text-zinc-700 mx-auto mb-3" />

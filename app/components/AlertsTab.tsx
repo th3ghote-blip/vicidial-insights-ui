@@ -12,10 +12,10 @@ const SEVERITY_META: Record<Alert["severity"], {
   border: string; bg: string; iconColor: string; icon: React.ElementType;
   labelEs: string; labelEn: string;
 }> = {
-  high:     { border: "border-red-500/30",     bg: "bg-red-50 dark:bg-gradient-to-br dark:from-red-500/[0.08] dark:to-transparent",         iconColor: "text-red-600 dark:text-red-400",         icon: AlertTriangle, labelEs: "URGENTE", labelEn: "URGENT" },
-  medium:   { border: "border-amber-500/30",   bg: "bg-amber-50 dark:bg-gradient-to-br dark:from-amber-500/[0.08] dark:to-transparent",     iconColor: "text-amber-600 dark:text-amber-400",     icon: AlertCircle,   labelEs: "AVISO",   labelEn: "WATCH"  },
-  low:      { border: "border-zinc-200 dark:border-zinc-700", bg: "bg-zinc-50 dark:bg-zinc-900/40",                                          iconColor: "text-zinc-600 dark:text-zinc-400",       icon: Info,          labelEs: "INFO",    labelEn: "INFO"   },
-  positive: { border: "border-emerald-500/30", bg: "bg-emerald-50 dark:bg-gradient-to-br dark:from-emerald-500/[0.08] dark:to-transparent", iconColor: "text-emerald-600 dark:text-emerald-400", icon: TrendingUp,    labelEs: "BUENO",   labelEn: "GOOD"   },
+  high:     { border: "border-red-500/30",                    bg: "bg-red-50 dark:bg-red-950/20",         iconColor: "text-red-600 dark:text-red-400",         icon: AlertTriangle, labelEs: "URGENTE", labelEn: "URGENT" },
+  medium:   { border: "border-amber-500/30",                  bg: "bg-amber-50 dark:bg-amber-950/20",     iconColor: "text-amber-600 dark:text-amber-400",     icon: AlertCircle,   labelEs: "AVISO",   labelEn: "WATCH"  },
+  low:      { border: "border-zinc-200 dark:border-zinc-700", bg: "bg-zinc-50 dark:bg-zinc-900/40",       iconColor: "text-zinc-600 dark:text-zinc-400",       icon: Info,          labelEs: "INFO",    labelEn: "INFO"   },
+  positive: { border: "border-emerald-500/30",                bg: "bg-emerald-50 dark:bg-emerald-950/20", iconColor: "text-emerald-600 dark:text-emerald-400", icon: TrendingUp,    labelEs: "BUENO",   labelEn: "GOOD"   },
 };
 
 const TYPE_META: Record<Alert["type"], { icon: React.ElementType; es: string; en: string }> = {

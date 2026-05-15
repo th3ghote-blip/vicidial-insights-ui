@@ -72,7 +72,7 @@ export default function KpiStrip({
           return (
             <div
               key={i}
-              className="group relative rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-gradient-to-br dark:from-zinc-900/60 dark:to-zinc-900/20 p-3 sm:p-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all shadow-sm dark:shadow-none"
+              className="group relative rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 p-3 sm:p-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all shadow-sm dark:shadow-none"
             >
               <div className="flex items-start justify-between mb-2 sm:mb-3">
                 <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-lg ${c.iconBg} flex items-center justify-center`}>
@@ -89,7 +89,7 @@ export default function KpiStrip({
       </div>
 
       {/* Forecast strip */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-gradient-to-r dark:from-zinc-900/60 dark:via-zinc-900/40 dark:to-zinc-900/60 px-4 py-3 flex items-center gap-3 shadow-sm dark:shadow-none">
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/50 px-4 py-3 flex items-center gap-3 shadow-sm dark:shadow-none">
         <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${forecastUp ? "bg-emerald-500/15" : "bg-red-500/15"}`}>
           {forecastUp ? <ArrowUpRight className="h-4 w-4 text-emerald-400" /> : <ArrowDownRight className="h-4 w-4 text-red-400" />}
         </div>
