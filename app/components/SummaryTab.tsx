@@ -16,32 +16,38 @@ export default function SummaryTab({
 }) {
   const tr = t[lang];
 
-  // Calculate metrics
-  const totalSales = salesTrend.reduce((s, d) => s + d.sales, 0);
+  // Filter to today only
+  const today = new Date().toISOString().split("T")[0];
+  const todayData = salesTrend.filter(d => d.date.startsWith(today));
+  const todaySales = todayData.reduce((s, d) => s + d.sales, 0);
+
+  // Calculate metrics for today
+  const totalSales = todaySales;
   const totalCalls = agents.reduce((s, a) => s + a.calls_handled, 0);
   const conversion = totalCalls > 0 ? ((totalSales / totalCalls) * 100).toFixed(1) : "0";
-  const avgDailySales = salesTrend.length > 0 ? (totalSales / salesTrend.length).toFixed(0) : "0";
 
-  // Trend: compare first half to second half
-  const midpoint = Math.floor(salesTrend.length / 2);
-  const firstHalf = salesTrend.slice(0, midpoint).reduce((s, d) => s + d.sales, 0);
-  const secondHalf = salesTrend.slice(midpoint).reduce((s, d) => s + d.sales, 0);
-  const trendUp = secondHalf >= firstHalf;
-  const trendDelta = firstHalf > 0 ? (((secondHalf - firstHalf) / firstHalf) * 100).toFixed(1) : "0";
+  // Trend: compare today to yesterday
+  const yesterday = new Date(new Date().setDate(new Date().getDate() - 1)).toISOString().split("T")[0];
+  const yesterdayData = salesTrend.filter(d => d.date.startsWith(yesterday));
+  const yesterdaySales = yesterdayData.reduce((s, d) => s + d.sales, 0);
+  const trendUp = todaySales >= yesterdaySales;
+  const trendDelta = yesterdaySales > 0 ? (((todaySales - yesterdaySales) / yesterdaySales) * 100).toFixed(1) : "0";
 
   // Campaign ranking by sales
   const campaignsByRevenue = [...campaigns].sort((a, b) => b.sales - a.sales);
 
-  // Chart data - daily sales
-  const chartData = salesTrend.map((d) => ({
+  // Chart data - last 7 days for context
+  const last7 = salesTrend.slice(-7);
+  const chartData = last7.map((d) => ({
     date: new Date(d.date).toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { month: "short", day: "numeric" }),
     sales: d.sales,
+    isToday: d.date.startsWith(today),
   }));
 
   // Chart sizing
   const chartHeight = 200;
   const chartWidth = 100;
-  const maxSales = Math.max(...salesTrend.map(d => d.sales), 1);
+  const maxSales = Math.max(...last7.map(d => d.sales), 1);
 
   return (
     <section className="space-y-6">
@@ -50,7 +56,7 @@ export default function SummaryTab({
           {lang === "es" ? "Resumen ejecutivo" : "Executive Summary"}
         </h2>
         <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">
-          {lang === "es" ? `Últimos ${range} días` : `Last ${range} days`}
+          {lang === "es" ? "Hoy" : "Today"}
         </p>
       </div>
 
@@ -64,7 +70,7 @@ export default function SummaryTab({
         <MetricCard
           label={lang === "es" ? "Llamadas" : "Calls"}
           value={totalCalls.toLocaleString()}
-          sub={lang === "es" ? "últimos " + range + " días" : `last ${range} days`}
+          sub={lang === "es" ? "últimos 30 días" : "last 30 days"}
         />
         <MetricCard
           label={lang === "es" ? "Tasa de cierre" : "Close rate"}
@@ -79,27 +85,29 @@ export default function SummaryTab({
         />
       </div>
 
-      {/* Daily sales chart */}
+      {/* Daily sales chart - last 7 days */}
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 sm:p-6">
         <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
-          {lang === "es" ? "Ventas diarias" : "Daily sales"}
+          {lang === "es" ? "Últimos 7 días" : "Last 7 days"}
         </h3>
         <div style={{ height: "280px", display: "flex", alignItems: "flex-end", justifyContent: "space-around", gap: "4px", padding: "16px 0" }}>
           {chartData.map((d, i) => {
             const barHeight = (d.sales / maxSales) * 240;
+            const isToday = d.date === chartData[chartData.length - 1].date;
             return (
               <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1 }}>
                 <div
                   style={{
                     width: "100%",
                     height: `${barHeight}px`,
-                    backgroundColor: "rgb(34, 197, 94)",
+                    backgroundColor: isToday ? "rgb(16, 185, 129)" : "rgb(34, 197, 94)",
                     borderRadius: "4px 4px 0 0",
-                    opacity: 0.8,
+                    opacity: isToday ? 1 : 0.6,
+                    boxShadow: isToday ? "0 0 12px rgba(16, 185, 129, 0.4)" : "none",
                   }}
                   title={`${d.sales} sales`}
                 />
-                <div style={{ fontSize: "10px", marginTop: "8px", color: "#999", textAlign: "center", width: "100%" }}>
+                <div style={{ fontSize: "10px", marginTop: "8px", color: "#999", textAlign: "center", width: "100%", fontWeight: isToday ? 600 : 400 }}>
                   {d.date}
                 </div>
               </div>
