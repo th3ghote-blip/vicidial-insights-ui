@@ -29,14 +29,14 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
               </tr>
             </thead>
             <tbody>
-              {leads.slice(0, 40).map(l => (
+              {leads.slice(0, 60).map(l => (
                 <tr
                   key={l.lead_id}
                   onClick={() => setSelected(l)}
                   className={`border-t border-zinc-800 cursor-pointer transition-colors ${selected?.lead_id === l.lead_id ? "bg-zinc-800/60" : "hover:bg-zinc-900/50"}`}
                 >
                   <td className="px-4 py-2 font-mono text-zinc-400">{l.lead_id}</td>
-                  <td className="px-4 py-2">{l.state}</td>
+                  <td className="px-4 py-2">{l.first_name ? `${l.first_name} ${l.last_name}` : l.state}</td>
                   <td className="px-4 py-2">{l.called_count}</td>
                   <td className="px-4 py-2 text-zinc-300">{l.last_call_dispo || "—"}</td>
                   <td className="px-4 py-2">
@@ -86,11 +86,21 @@ function LeadDetail({ lead, lang, onClose }: { lead: Lead; lang: Lang; onClose: 
       </div>
 
       <div className="space-y-2 text-sm">
-        <Row label={d.stateLabel} value={lead.state} />
+        {(lead.first_name || lead.last_name) && (
+          <Row label={lang === "es" ? "Nombre" : "Name"} value={`${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim()} />
+        )}
+        <Row label={d.stateLabel} value={`${lead.state} ${lead.postal_code}`} />
         <Row label={d.campaignLabel} value={lead.campaign_id} />
+        {lead.source && (
+          <Row label={lang === "es" ? "Fuente" : "Source"} value={lead.source.replace(/_/g, " ")} />
+        )}
+        {lead.language && (
+          <Row label={lang === "es" ? "Idioma" : "Language"} value={lead.language === "es" ? "Español" : "English"} />
+        )}
         <Row label={d.attemptsLabel} value={lead.called_count.toString()} />
         <Row label={d.lastDispo} value={lead.last_call_dispo || "—"} />
         <Row label={d.lastDuration} value={`${lead.last_call_duration_sec}s`} />
+        <Row label={lang === "es" ? "Total en llamadas" : "Total talk time"} value={`${lead.total_call_seconds}s`} />
         <Row label={d.lastCallAt} value={fmtRelative(lead.last_local_call_time, lang)} />
       </div>
 

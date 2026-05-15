@@ -30,6 +30,8 @@ async function fetchJSON<T>(path: string, revalidate = 60): Promise<T> {
 
 export type Lead = {
   lead_id: number;
+  first_name: string;
+  last_name: string;
   phone_number: string;
   state: string;
   postal_code: string;
@@ -41,6 +43,8 @@ export type Lead = {
   last_call_dispo: string;
   total_call_seconds: number;
   campaign_id: string;
+  source: string;
+  language: "es" | "en";
   score: number;
   recommendation: "call_now" | "route_closer" | "callback_due" | "rest" | "dnc_review";
   reasons: string[];
@@ -54,11 +58,39 @@ export type AgentStat = {
   close_rate: number;
   talk_seconds: number;
   avg_talk_sec: number;
+  // Efficiency
+  login_seconds: number;
+  pause_seconds: number;
+  utilization_rate: number;
+  avg_wait_sec: number;
+  dials_per_hour: number;
+  // Follow-up
+  callbacks_set: number;
+  callbacks_converted: number;
+  callback_conversion_rate: number;
+};
+
+export type CampaignStat = {
+  campaign_id: string;
+  campaign_name: string;
+  leads_total: number;
+  leads_contacted: number;
+  contact_rate: number;
+  penetration_rate: number;
+  total_dials: number;
+  total_sales: number;
+  conversion_rate: number;
+  dials_per_sale: number;
+  avg_handle_time_sec: number;
+  best_hour: number;
+  best_day: string;
+  active_agents: number;
+  cost_per_lead_usd: number;
 };
 
 export type Disposition = { dispo: string; count: number };
 export type CallHour = { hour: number; calls: number; sales: number };
-export type SalesDay = { date: string; sales: number };
+export type SalesDay = { date: string; sales: number; calls?: number };
 export type WeeklyInsight = { lang: "es" | "en"; summary: string; top_leads_count: number };
 export type Campaign = { campaign_id: string; campaign_name: string; active: string };
 
@@ -91,4 +123,6 @@ export const api = {
   weekly: (lang: "es" | "en" = "es") =>
     fetchJSON<WeeklyInsight>(`/insights/weekly?lang=${lang}`),
   campaigns: () => fetchJSON<{ campaigns: Campaign[] }>(`/campaigns`),
+  campaignPerformance: (daysBack = 30) =>
+    fetchJSON<{ campaigns: CampaignStat[] }>(`/campaigns/performance?days_back=${daysBack}`),
 };

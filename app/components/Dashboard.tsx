@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Lead, AgentStat, Disposition, CallHour, SalesDay, WeeklyInsight, Health } from "@/lib/api";
+import type { Lead, AgentStat, Disposition, CallHour, SalesDay, WeeklyInsight, Health, CampaignStat } from "@/lib/api";
 import { t, type Lang } from "@/lib/i18n";
 import KpiStrip from "./KpiStrip";
 import AiBanner from "./AiBanner";
@@ -18,6 +18,7 @@ type Props = {
   callTimes: CallHour[];
   salesTrend: SalesDay[];
   weekly: WeeklyInsight;
+  campaigns: CampaignStat[];
 };
 
 type TabKey = "leads" | "agents" | "insights";
@@ -93,6 +94,7 @@ export default function Dashboard(props: Props) {
               dispos={props.dispos}
               callTimes={props.callTimes}
               salesTrend={props.salesTrend}
+              campaigns={props.campaigns}
             />
           )}
         </main>
