@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# vicidial-insights-ui
 
-## Getting Started
+Spanish-first Next.js dashboard for the [vicidial-insights](https://github.com/th3ghote-blip/vicidial-insights) FastAPI backend.
 
-First, run the development server:
+The bearer token for the backend lives in Vercel env vars and never leaves the
+server — every fetch happens in a Server Component or route handler. The browser
+only receives the rendered HTML and the data it needs.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Architecture
+
+```
+Browser → Next.js (Vercel)  →  Railway (Python API)  →  Supabase + Vicidial
+              ↑
+       VICIDIAL_API_TOKEN lives here, server-side only
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local dev
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+copy .env.example .env.local   # fill in the token
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open http://localhost:3000.
 
-## Learn More
+## Env vars
 
-To learn more about Next.js, take a look at the following resources:
+| Name | Where | Value |
+|---|---|---|
+| `VICIDIAL_API_BASE` | Vercel + .env.local | `https://vicidial-insights-production.up.railway.app` |
+| `VICIDIAL_API_TOKEN` | Vercel + .env.local | bearer token from the FastAPI deploy |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Both must be set in Vercel for **Production AND Preview** environments.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy
 
-## Deploy on Vercel
+```bash
+vercel --prod
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Or push to `main` — Vercel's GitHub integration auto-deploys.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Stack
+
+- Next.js 16 (App Router, Turbopack, server components)
+- Tailwind v4
+- Recharts for the dispositions chart
+- TypeScript strict
