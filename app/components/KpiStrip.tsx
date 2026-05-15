@@ -29,7 +29,7 @@ export default function KpiStrip({
       icon: Flame,
       iconBg: "bg-emerald-500/10",
       iconColor: "text-emerald-400",
-      valueColor: "text-emerald-300",
+      valueColor: "text-emerald-600 dark:text-emerald-300",
     },
     {
       label: tr.conversion,
@@ -38,7 +38,7 @@ export default function KpiStrip({
       icon: TrendingUp,
       iconBg: "bg-sky-500/10",
       iconColor: "text-sky-400",
-      valueColor: "text-sky-300",
+      valueColor: "text-sky-600 dark:text-sky-300",
       sparkline: sparkData,
     },
     {
@@ -48,7 +48,7 @@ export default function KpiStrip({
       icon: Phone,
       iconBg: "bg-zinc-700/40",
       iconColor: "text-zinc-300",
-      valueColor: "text-zinc-100",
+      valueColor: "text-zinc-900 dark:text-zinc-100",
     },
     {
       label: tr.topCloser,
@@ -57,7 +57,7 @@ export default function KpiStrip({
       icon: Award,
       iconBg: "bg-amber-500/10",
       iconColor: "text-amber-400",
-      valueColor: "text-amber-300",
+      valueColor: "text-amber-600 dark:text-amber-300",
     },
   ];
 
@@ -72,7 +72,7 @@ export default function KpiStrip({
           return (
             <div
               key={i}
-              className="group relative rounded-xl border border-zinc-800/80 bg-gradient-to-br from-zinc-900/60 to-zinc-900/20 p-4 hover:border-zinc-700 transition-all"
+              className="group relative rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-gradient-to-br dark:from-zinc-900/60 dark:to-zinc-900/20 p-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all shadow-sm dark:shadow-none"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className={`h-8 w-8 rounded-lg ${c.iconBg} flex items-center justify-center`}>
@@ -89,7 +89,7 @@ export default function KpiStrip({
       </div>
 
       {/* Forecast strip */}
-      <div className="rounded-xl border border-zinc-800/80 bg-gradient-to-r from-zinc-900/60 via-zinc-900/40 to-zinc-900/60 px-4 py-3 flex items-center gap-3">
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-gradient-to-r dark:from-zinc-900/60 dark:via-zinc-900/40 dark:to-zinc-900/60 px-4 py-3 flex items-center gap-3 shadow-sm dark:shadow-none">
         <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${forecastUp ? "bg-emerald-500/15" : "bg-red-500/15"}`}>
           {forecastUp ? <ArrowUpRight className="h-4 w-4 text-emerald-400" /> : <ArrowDownRight className="h-4 w-4 text-red-400" />}
         </div>
@@ -97,8 +97,8 @@ export default function KpiStrip({
           <div className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">
             {lang === "es" ? "Pronóstico próximos 7 días" : "Next 7 days forecast"}
           </div>
-          <div className="text-sm text-zinc-300 mt-0.5">
-            <span className="font-semibold text-zinc-100 tabular-nums">{forecast.expected_total_sales}</span>
+          <div className="text-sm text-zinc-700 dark:text-zinc-300 mt-0.5">
+            <span className="font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">{forecast.expected_total_sales}</span>
             {" "}{lang === "es" ? "ventas esperadas" : "expected sales"}
             <span className={`ml-2 font-medium tabular-nums ${forecastUp ? "text-emerald-400" : "text-red-400"}`}>
               {forecastUp ? "+" : ""}{forecast.delta_vs_last_week_pct.toFixed(1)}%

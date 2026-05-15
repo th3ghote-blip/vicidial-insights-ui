@@ -17,6 +17,13 @@ export const metadata: Metadata = {
   description: "Lead scoring + Spanish-first AI analytics for outbound call centers running Vicidial",
 };
 
+const themeBootstrap = `
+  try {
+    var t = localStorage.getItem('theme') || 'dark';
+    if (t === 'dark') document.documentElement.classList.add('dark');
+  } catch (e) {}
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,8 +32,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

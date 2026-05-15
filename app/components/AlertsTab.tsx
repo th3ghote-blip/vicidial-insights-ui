@@ -12,10 +12,10 @@ const SEVERITY_META: Record<Alert["severity"], {
   border: string; bg: string; iconColor: string; icon: React.ElementType;
   labelEs: string; labelEn: string;
 }> = {
-  high:     { border: "border-red-500/30",     bg: "bg-gradient-to-br from-red-500/[0.08] to-transparent",     iconColor: "text-red-400",     icon: AlertTriangle, labelEs: "URGENTE", labelEn: "URGENT" },
-  medium:   { border: "border-amber-500/30",   bg: "bg-gradient-to-br from-amber-500/[0.08] to-transparent",   iconColor: "text-amber-400",   icon: AlertCircle,   labelEs: "AVISO",   labelEn: "WATCH"  },
-  low:      { border: "border-zinc-700",       bg: "bg-zinc-900/40",                                          iconColor: "text-zinc-400",    icon: Info,          labelEs: "INFO",    labelEn: "INFO"   },
-  positive: { border: "border-emerald-500/30", bg: "bg-gradient-to-br from-emerald-500/[0.08] to-transparent", iconColor: "text-emerald-400", icon: TrendingUp,    labelEs: "BUENO",   labelEn: "GOOD"   },
+  high:     { border: "border-red-500/30",     bg: "bg-red-50 dark:bg-gradient-to-br dark:from-red-500/[0.08] dark:to-transparent",         iconColor: "text-red-600 dark:text-red-400",         icon: AlertTriangle, labelEs: "URGENTE", labelEn: "URGENT" },
+  medium:   { border: "border-amber-500/30",   bg: "bg-amber-50 dark:bg-gradient-to-br dark:from-amber-500/[0.08] dark:to-transparent",     iconColor: "text-amber-600 dark:text-amber-400",     icon: AlertCircle,   labelEs: "AVISO",   labelEn: "WATCH"  },
+  low:      { border: "border-zinc-200 dark:border-zinc-700", bg: "bg-zinc-50 dark:bg-zinc-900/40",                                          iconColor: "text-zinc-600 dark:text-zinc-400",       icon: Info,          labelEs: "INFO",    labelEn: "INFO"   },
+  positive: { border: "border-emerald-500/30", bg: "bg-emerald-50 dark:bg-gradient-to-br dark:from-emerald-500/[0.08] dark:to-transparent", iconColor: "text-emerald-600 dark:text-emerald-400", icon: TrendingUp,    labelEs: "BUENO",   labelEn: "GOOD"   },
 };
 
 const TYPE_META: Record<Alert["type"], { icon: React.ElementType; es: string; en: string }> = {
@@ -68,10 +68,10 @@ export default function AlertsTab({
     <section className="space-y-5">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">
+        <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
           {lang === "es" ? "Alertas" : "Alerts"}
         </h2>
-        <p className="text-sm text-zinc-400 mt-0.5">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
           {lang === "es"
             ? `${alerts.length} alertas generadas por IA · cacheado 5 min`
             : `${alerts.length} AI-generated alerts · cached 5 min`}
@@ -104,9 +104,9 @@ export default function AlertsTab({
 
       {/* Alerts list */}
       {visible.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-12 text-center">
-          <Sparkles className="h-8 w-8 text-zinc-600 mx-auto mb-3" />
-          <div className="text-sm text-zinc-400">
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/30 p-12 text-center">
+          <Sparkles className="h-8 w-8 text-zinc-400 dark:text-zinc-600 mx-auto mb-3" />
+          <div className="text-sm text-zinc-500 dark:text-zinc-400">
             {dismissed.size > 0
               ? (lang === "es" ? "Todas las alertas atendidas" : "All alerts handled")
               : (lang === "es" ? "Sin alertas. Todo en orden." : "No alerts. All clear.")}
@@ -127,7 +127,7 @@ export default function AlertsTab({
                 className={`group relative rounded-xl border ${meta.border} ${meta.bg} p-4 hover:shadow-lg hover:shadow-black/20 transition-all`}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`h-9 w-9 rounded-lg bg-zinc-900/60 border ${meta.border} flex items-center justify-center shrink-0`}>
+                  <div className={`h-9 w-9 rounded-lg bg-white dark:bg-zinc-900/60 border ${meta.border} flex items-center justify-center shrink-0`}>
                     <SevIcon className={`h-4 w-4 ${meta.iconColor}`} strokeWidth={2.2} />
                   </div>
 
@@ -143,11 +143,11 @@ export default function AlertsTab({
                       </span>
                     </div>
 
-                    <h3 className="font-medium text-zinc-100 leading-snug">{a.title}</h3>
-                    <p className="text-sm text-zinc-300 mt-0.5">{a.message}</p>
+                    <h3 className="font-medium text-zinc-900 dark:text-zinc-100 leading-snug">{a.title}</h3>
+                    <p className="text-sm text-zinc-700 dark:text-zinc-300 mt-0.5">{a.message}</p>
 
                     {a.action && (
-                      <div className="mt-2.5 flex items-center gap-1.5 text-xs text-zinc-400">
+                      <div className="mt-2.5 flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
                         <ChevronRight className="h-3 w-3 text-zinc-600" />
                         <span>{a.action}</span>
                       </div>
@@ -167,7 +167,7 @@ export default function AlertsTab({
                   {/* Dismiss */}
                   <button
                     onClick={() => setDismissed(new Set([...dismissed, a._idx]))}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-200"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
                     title={lang === "es" ? "Descartar" : "Dismiss"}
                   >
                     <X className="h-3.5 w-3.5" />

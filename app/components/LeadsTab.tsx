@@ -49,8 +49,8 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
   return (
     <section className="space-y-5">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">{tr.leadsHeader}</h2>
-        <p className="text-sm text-zinc-400 mt-0.5">
+        <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">{tr.leadsHeader}</h2>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
           {tr.leadsSub} · {filtered.length} {lang === "es" ? "de" : "of"} {leads.length}
         </p>
       </div>
@@ -64,10 +64,10 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={lang === "es" ? "Buscar por nombre, ID, teléfono…" : "Search name, ID, phone…"}
-            className="w-full pl-9 pr-9 py-2 text-sm bg-zinc-900/60 border border-zinc-800 rounded-lg focus:outline-none focus:border-zinc-600 focus:bg-zinc-900 transition-colors placeholder:text-zinc-600"
+            className="w-full pl-9 pr-9 py-2 text-sm bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 transition-colors placeholder:text-zinc-400 dark:placeholder:text-zinc-600 text-zinc-900 dark:text-zinc-100"
           />
           {search && (
-            <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded hover:bg-zinc-800 flex items-center justify-center text-zinc-500">
+            <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-500">
               <X className="h-3.5 w-3.5" />
             </button>
           )}
@@ -83,8 +83,8 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
                 onClick={() => setRecFilter(p.key)}
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs transition-all ${
                   active
-                    ? "bg-zinc-800 text-white border-zinc-700"
-                    : "text-zinc-500 border-zinc-800 hover:border-zinc-700 hover:text-zinc-300"
+                    ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white border-zinc-300 dark:border-zinc-700"
+                    : "text-zinc-600 dark:text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-300"
                 }`}
               >
                 <span>{p.key === "all" ? (lang === "es" ? "Todos" : "All") : recLabel(lang, p.key)}</span>
@@ -97,10 +97,10 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
 
       <div className="grid lg:grid-cols-[1fr_22rem] gap-4">
         {/* Table */}
-        <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/30">
+        <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/30">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-zinc-900/60 text-zinc-500">
+              <thead className="bg-zinc-50 dark:bg-zinc-900/60 text-zinc-500">
                 <tr>
                   <th className="text-left px-4 py-2.5 font-medium text-xs uppercase tracking-wider">{tr.leadCol.id}</th>
                   <th className="text-left px-4 py-2.5 font-medium text-xs uppercase tracking-wider">{lang === "es" ? "Nombre" : "Name"}</th>
@@ -111,22 +111,22 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
                   <th className="text-left px-4 py-2.5 font-medium text-xs uppercase tracking-wider">{tr.leadCol.rec}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60">
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
                 {filtered.slice(0, 60).map(l => {
                   const isSel = selected?.lead_id === l.lead_id;
                   return (
                     <tr
                       key={l.lead_id}
                       onClick={() => setSelected(l)}
-                      className={`cursor-pointer transition-colors ${isSel ? "bg-zinc-800/60" : "hover:bg-zinc-900/60"}`}
+                      className={`cursor-pointer transition-colors ${isSel ? "bg-zinc-100 dark:bg-zinc-800/60" : "hover:bg-zinc-50 dark:hover:bg-zinc-900/60"}`}
                     >
                       <td className="px-4 py-2.5 font-mono text-zinc-500 text-xs">{l.lead_id}</td>
-                      <td className="px-4 py-2.5 text-zinc-200">
+                      <td className="px-4 py-2.5 text-zinc-800 dark:text-zinc-200">
                         {l.first_name ? `${l.first_name} ${l.last_name}` : "—"}
                       </td>
-                      <td className="px-4 py-2.5 text-zinc-400">{l.state}</td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-zinc-300">{l.called_count}</td>
-                      <td className="px-4 py-2.5 text-zinc-400 font-mono text-xs">{l.last_call_dispo || "—"}</td>
+                      <td className="px-4 py-2.5 text-zinc-600 dark:text-zinc-400">{l.state}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-300">{l.called_count}</td>
+                      <td className="px-4 py-2.5 text-zinc-600 dark:text-zinc-400 font-mono text-xs">{l.last_call_dispo || "—"}</td>
                       <td className="px-4 py-2.5">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-xs font-mono ${scoreColor(l.score)}`}>
                           {l.score}
@@ -151,10 +151,10 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
         </div>
 
         {/* Detail panel */}
-        <aside className="rounded-xl border border-zinc-800 bg-gradient-to-b from-zinc-900/50 to-zinc-900/20 p-5 h-fit lg:sticky lg:top-32">
+        <aside className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-gradient-to-b dark:from-zinc-900/50 dark:to-zinc-900/20 p-5 h-fit lg:sticky lg:top-32 shadow-sm dark:shadow-none">
           {selected ? <LeadDetail lead={selected} lang={lang} onClose={() => setSelected(null)} /> : (
             <div className="text-sm text-zinc-500 py-12 text-center">
-              <Users className="h-8 w-8 text-zinc-700 mx-auto mb-3" />
+              <Users className="h-8 w-8 text-zinc-300 dark:text-zinc-700 mx-auto mb-3" />
               {lang === "es" ? "Selecciona un lead para ver el detalle" : "Select a lead to see details"}
             </div>
           )}
@@ -172,11 +172,11 @@ function LeadDetail({ lead, lang, onClose }: { lead: Lead; lang: Lang; onClose: 
           <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">
             {lang === "es" ? "Lead" : "Lead"} #{lead.lead_id}
           </div>
-          <div className="text-lg font-semibold text-zinc-100 mt-0.5">
+          <div className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mt-0.5">
             {lead.first_name ? `${lead.first_name} ${lead.last_name}` : `#${lead.lead_id}`}
           </div>
         </div>
-        <button onClick={onClose} className="h-7 w-7 rounded-lg hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-200">
+        <button onClick={onClose} className="h-7 w-7 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -190,7 +190,7 @@ function LeadDetail({ lead, lang, onClose }: { lead: Lead; lang: Lang; onClose: 
         </span>
       </div>
 
-      <div className="space-y-2.5 text-sm pt-2 border-t border-zinc-800">
+      <div className="space-y-2.5 text-sm pt-2 border-t border-zinc-200 dark:border-zinc-800">
         <DetailRow icon={Phone}    label={lang === "es" ? "Teléfono" : "Phone"} value={lead.phone_number} mono />
         <DetailRow icon={MapPin}   label={lang === "es" ? "Ubicación" : "Location"} value={`${lead.state} ${lead.postal_code}`} />
         <DetailRow icon={Tag}      label={lang === "es" ? "Campaña" : "Campaign"} value={lead.campaign_id} />
@@ -204,13 +204,13 @@ function LeadDetail({ lead, lang, onClose }: { lead: Lead; lang: Lang; onClose: 
       </div>
 
       {lead.reasons.length > 0 && (
-        <div className="pt-3 border-t border-zinc-800">
+        <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800">
           <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-2">
             {lang === "es" ? "Por qué este score" : "Why this score"}
           </div>
           <ul className="space-y-1.5">
             {lead.reasons.map((r, i) => (
-              <li key={i} className="text-sm text-zinc-300 flex gap-2 items-start">
+              <li key={i} className="text-sm text-zinc-700 dark:text-zinc-300 flex gap-2 items-start">
                 <span className="text-emerald-400 mt-1.5 leading-none">·</span>
                 <span>{r}</span>
               </li>
@@ -229,7 +229,7 @@ function DetailRow({ icon: Icon, label, value, mono }: { icon: React.ElementType
         <Icon className="h-3.5 w-3.5" strokeWidth={2} />
         {label}
       </span>
-      <span className={`text-zinc-200 text-right ${mono ? "font-mono text-xs" : ""}`}>{value}</span>
+      <span className={`text-zinc-800 dark:text-zinc-200 text-right ${mono ? "font-mono text-xs" : ""}`}>{value}</span>
     </div>
   );
 }

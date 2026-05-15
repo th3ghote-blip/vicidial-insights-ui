@@ -1,6 +1,6 @@
 "use client";
 
-import type { Disposition, CallHour, SalesDay, WeeklyInsight, CampaignStat, SourceROI, PipelineForecast, ContactVelocity } from "@/lib/api";
+import type { Disposition, CallHour, SalesDay, WeeklyInsight, CampaignStat, SourceROI, PipelineForecast, ContactVelocity, AgentCampaignCell } from "@/lib/api";
 import { t, type Lang, fmtDate } from "@/lib/i18n";
 import AiBanner from "./AiBanner";
 import {
@@ -12,7 +12,7 @@ const DISPO_COLORS = ["#10b981", "#f59e0b", "#94a3b8", "#71717a", "#ef4444", "#6
 const TOOLTIP_STYLE = { backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, color: "#fff" };
 
 export default function InsightsTab({
-  lang, weekly, dispos, callTimes, salesTrend, campaigns, sources, forecast, velocity,
+  lang, weekly, dispos, callTimes, salesTrend, campaigns, sources, forecast, velocity, matrix,
 }: {
   lang: Lang;
   weekly: WeeklyInsight;
@@ -23,7 +23,22 @@ export default function InsightsTab({
   sources: SourceROI[];
   forecast: PipelineForecast;
   velocity: ContactVelocity;
+  matrix: AgentCampaignCell[];
 }) {
+  // Build agent×campaign heatmap data
+  const agentNames = Array.from(new Set(matrix.map(c => c.full_name)));
+  const campaignNames = Array.from(new Set(matrix.map(c => c.campaign_name)));
+  const cellLookup = new Map(matrix.map(c => [`${c.full_name}|${c.campaign_name}`, c]));
+  const allRates = matrix.map(c => c.close_rate).filter(r => r > 0);
+  const maxRate = Math.max(...allRates, 0.0001);
+  const heatColor = (rate: number) => {
+    if (rate === 0) return "bg-zinc-100 dark:bg-zinc-900/60 text-zinc-400 dark:text-zinc-600";
+    const intensity = rate / maxRate;
+    if (intensity >= 0.75) return "bg-emerald-500/30 text-emerald-700 dark:text-emerald-200 font-semibold";
+    if (intensity >= 0.50) return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300";
+    if (intensity >= 0.30) return "bg-amber-500/15 text-amber-700 dark:text-amber-300";
+    return "bg-red-500/15 text-red-600 dark:text-red-300";
+  };
   const tr = t[lang];
 
   return (
@@ -39,13 +54,13 @@ export default function InsightsTab({
 
       {/* Lead source ROI */}
       <div>
-        <h3 className="text-sm font-medium text-zinc-300 mb-3">
+        <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
           {lang === "es" ? "ROI por fuente de leads" : "Lead source ROI"}
         </h3>
-        <div className="overflow-x-auto rounded-lg border border-zinc-800">
+        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-transparent">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 dark:border-zinc-800 text-xs uppercase text-zinc-500">
                 <th className="px-4 py-2 text-left">{lang === "es" ? "Fuente" : "Source"}</th>
                 <th className="px-4 py-2 text-right">{lang === "es" ? "Leads" : "Leads"}</th>
                 <th className="px-4 py-2 text-right">{lang === "es" ? "Contacto" : "Contact"}</th>
@@ -55,16 +70,16 @@ export default function InsightsTab({
                 <th className="px-4 py-2 text-right">{lang === "es" ? "$/venta" : "$/sale"}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/50">
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
               {sources.map((s) => (
-                <tr key={s.source} className="hover:bg-zinc-900/30">
-                  <td className="px-4 py-2 font-medium text-zinc-200">{s.source.replace(/_/g, " ")}</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-zinc-400">{s.leads_total.toLocaleString()}</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-zinc-400">{(s.contact_rate * 100).toFixed(0)}%</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-emerald-300">{s.sales}</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-sky-300">{(s.conversion_rate * 100).toFixed(1)}%</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-zinc-400">${s.cost_per_lead_usd.toFixed(2)}</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-amber-300 font-medium">${s.cost_per_sale_usd.toFixed(0)}</td>
+                <tr key={s.source} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/30">
+                  <td className="px-4 py-2 font-medium text-zinc-800 dark:text-zinc-200">{s.source.replace(/_/g, " ")}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-zinc-600 dark:text-zinc-400">{s.leads_total.toLocaleString()}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-zinc-600 dark:text-zinc-400">{(s.contact_rate * 100).toFixed(0)}%</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-emerald-600 dark:text-emerald-300">{s.sales}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-sky-600 dark:text-sky-300">{(s.conversion_rate * 100).toFixed(1)}%</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-zinc-600 dark:text-zinc-400">${s.cost_per_lead_usd.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-amber-600 dark:text-amber-300 font-medium">${s.cost_per_sale_usd.toFixed(0)}</td>
                 </tr>
               ))}
             </tbody>
@@ -108,15 +123,64 @@ export default function InsightsTab({
         </ChartCard>
       </div>
 
+      {/* Agent × Campaign heatmap */}
+      <div>
+        <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
+          {lang === "es" ? "Matriz de rendimiento — agente × campaña" : "Performance matrix — agent × campaign"}
+        </h3>
+        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/30">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                <th className="px-3 py-2 text-left font-medium text-zinc-500 sticky left-0 bg-white dark:bg-zinc-900/60 z-10">
+                  {lang === "es" ? "Agente" : "Agent"}
+                </th>
+                {campaignNames.map(c => (
+                  <th key={c} className="px-3 py-2 text-center font-medium text-zinc-500 max-w-[120px] truncate" title={c}>
+                    {c.split(" - ")[0]}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+              {agentNames.map(agent => (
+                <tr key={agent}>
+                  <td className="px-3 py-2 font-medium text-zinc-700 dark:text-zinc-200 sticky left-0 bg-white dark:bg-zinc-900/40 z-10 whitespace-nowrap">
+                    {agent}
+                  </td>
+                  {campaignNames.map(c => {
+                    const cell = cellLookup.get(`${agent}|${c}`);
+                    const rate = cell?.close_rate ?? 0;
+                    return (
+                      <td key={c} className="px-1.5 py-1.5 text-center">
+                        <div className={`px-2 py-1 rounded-md tabular-nums font-mono ${heatColor(rate)}`} title={`${cell?.calls ?? 0} calls · ${cell?.sales ?? 0} sales`}>
+                          {rate > 0 ? `${(rate * 100).toFixed(1)}%` : "—"}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex items-center gap-3 mt-2 text-[11px] text-zinc-500">
+          <span>{lang === "es" ? "Cierre %:" : "Close %:"}</span>
+          <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-red-500/30"/>{lang === "es" ? "bajo" : "low"}</span>
+          <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-amber-500/30"/>{lang === "es" ? "medio" : "mid"}</span>
+          <span className="inline-flex items-center gap-1"><span className="h-3 w-3 rounded bg-emerald-500/30"/>{lang === "es" ? "alto" : "high"}</span>
+        </div>
+      </div>
+
       {/* Campaign performance table */}
       <div>
-        <h3 className="text-sm font-medium text-zinc-300 mb-3">
+        <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
           {lang === "es" ? "Rendimiento por campaña" : "Campaign performance"}
         </h3>
-        <div className="overflow-x-auto rounded-lg border border-zinc-800">
+        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-transparent">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 text-xs uppercase text-zinc-500">
+              <tr className="border-b border-zinc-200 dark:border-zinc-800 text-xs uppercase text-zinc-500">
                 <th className="px-4 py-2 text-left">{lang === "es" ? "Campaña" : "Campaign"}</th>
                 <th className="px-4 py-2 text-right">{lang === "es" ? "Leads" : "Leads"}</th>
                 <th className="px-4 py-2 text-right">{lang === "es" ? "Penetración" : "Penetration"}</th>
@@ -128,22 +192,22 @@ export default function InsightsTab({
                 <th className="px-4 py-2 text-right">{lang === "es" ? "Agentes" : "Agents"}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800/50">
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/50">
               {campaigns.map((c) => (
-                <tr key={c.campaign_id} className="hover:bg-zinc-900/30">
-                  <td className="px-4 py-2 font-medium text-zinc-200 max-w-[180px] truncate">{c.campaign_name}</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-zinc-400">{c.leads_total.toLocaleString()}</td>
+                <tr key={c.campaign_id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/30">
+                  <td className="px-4 py-2 font-medium text-zinc-800 dark:text-zinc-200 max-w-[180px] truncate">{c.campaign_name}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-zinc-600 dark:text-zinc-400">{c.leads_total.toLocaleString()}</td>
                   <td className="px-4 py-2 text-right tabular-nums">
                     <span className={penetrationColor(c.penetration_rate)}>
                       {(c.penetration_rate * 100).toFixed(0)}%
                     </span>
                   </td>
-                  <td className="px-4 py-2 text-right tabular-nums text-zinc-400">{c.total_dials.toLocaleString()}</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-emerald-300">{c.total_sales}</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-sky-300">{(c.conversion_rate * 100).toFixed(1)}%</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-amber-300">{c.dials_per_sale}</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-zinc-400">{c.best_hour}:00</td>
-                  <td className="px-4 py-2 text-right tabular-nums text-zinc-400">{c.active_agents}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-zinc-600 dark:text-zinc-400">{c.total_dials.toLocaleString()}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-emerald-600 dark:text-emerald-300">{c.total_sales}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-sky-600 dark:text-sky-300">{(c.conversion_rate * 100).toFixed(1)}%</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-amber-600 dark:text-amber-300">{c.dials_per_sale}</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-zinc-600 dark:text-zinc-400">{c.best_hour}:00</td>
+                  <td className="px-4 py-2 text-right tabular-nums text-zinc-600 dark:text-zinc-400">{c.active_agents}</td>
                 </tr>
               ))}
             </tbody>
@@ -169,28 +233,28 @@ export default function InsightsTab({
 }
 
 function penetrationColor(rate: number) {
-  if (rate >= 0.60) return "text-emerald-300";
-  if (rate >= 0.40) return "text-amber-300";
-  return "text-red-400";
+  if (rate >= 0.60) return "text-emerald-600 dark:text-emerald-300";
+  if (rate >= 0.40) return "text-amber-600 dark:text-amber-300";
+  return "text-red-500 dark:text-red-400";
 }
 
 function ForecastCard({ lang, forecast }: { lang: Lang; forecast: PipelineForecast }) {
   const positive = forecast.delta_vs_last_week_pct >= 0;
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 shadow-sm dark:shadow-none">
       <div className="text-xs uppercase tracking-wide text-zinc-500 mb-2">
         {lang === "es" ? "Pronóstico próximos 7 días" : "Next 7 days forecast"}
       </div>
       <div className="flex items-baseline gap-3">
-        <div className="text-3xl font-semibold text-emerald-300 tabular-nums">{forecast.expected_total_sales}</div>
-        <div className={`text-sm tabular-nums ${positive ? "text-emerald-400" : "text-red-400"}`}>
+        <div className="text-3xl font-semibold text-emerald-600 dark:text-emerald-300 tabular-nums">{forecast.expected_total_sales}</div>
+        <div className={`text-sm tabular-nums ${positive ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
           {positive ? "+" : ""}{forecast.delta_vs_last_week_pct.toFixed(1)}%
         </div>
       </div>
       <div className="text-xs text-zinc-500 mt-1">
         {lang === "es" ? `vs ${forecast.last_week_sales} la semana pasada` : `vs ${forecast.last_week_sales} last week`}
       </div>
-      <div className="mt-3 pt-3 border-t border-zinc-800 space-y-1 text-xs">
+      <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-1 text-xs">
         <Row label={lang === "es" ? "De callbacks" : "From callbacks"} value={`${forecast.expected_callback_sales}`} />
         <Row label={lang === "es" ? "De leads frescos" : "From fresh leads"} value={`${forecast.expected_fresh_sales}`} />
         <Row label={lang === "es" ? "Callbacks programados" : "Callbacks scheduled"} value={`${forecast.callbacks_scheduled_next_7d}`} />
@@ -201,21 +265,21 @@ function ForecastCard({ lang, forecast }: { lang: Lang; forecast: PipelineForeca
 
 function VelocityCard({ lang, velocity }: { lang: Lang; velocity: ContactVelocity }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 shadow-sm dark:shadow-none">
       <div className="text-xs uppercase tracking-wide text-zinc-500 mb-2">
         {lang === "es" ? "Velocidad de contacto" : "Contact velocity"}
       </div>
       <div className="flex items-baseline gap-3">
-        <div className="text-3xl font-semibold text-sky-300 tabular-nums">{velocity.avg_hours_to_first_contact}h</div>
+        <div className="text-3xl font-semibold text-sky-600 dark:text-sky-300 tabular-nums">{velocity.avg_hours_to_first_contact}h</div>
         <div className="text-xs text-zinc-500">
           {lang === "es" ? "promedio al 1er intento" : "avg to first dial"}
         </div>
       </div>
-      <div className="mt-3 pt-3 border-t border-zinc-800 space-y-1 text-xs">
+      <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-1 text-xs">
         <Row
           label={lang === "es" ? `Atascados >${velocity.stuck_threshold_hours}h` : `Stuck >${velocity.stuck_threshold_hours}h`}
           value={`${velocity.leads_stuck_no_contact}`}
-          valueColor={velocity.alert ? "text-red-400" : "text-zinc-300"}
+          valueColor={velocity.alert ? "text-red-500 dark:text-red-400" : "text-zinc-700 dark:text-zinc-300"}
         />
         {velocity.conversion_by_age.slice(0, 3).map((c) => (
           <Row key={c.age_bucket}
@@ -231,7 +295,7 @@ function VelocityCard({ lang, velocity }: { lang: Lang; velocity: ContactVelocit
 function FunnelCard({ lang, forecast }: { lang: Lang; forecast: PipelineForecast }) {
   const f = forecast.funnel;
   const stages = [
-    { key: "new",       label: { es: "Nuevos",       en: "New"        }, value: f.new,       color: "bg-zinc-500" },
+    { key: "new",       label: { es: "Nuevos",       en: "New"        }, value: f.new,       color: "bg-zinc-400 dark:bg-zinc-500" },
     { key: "contacted", label: { es: "Contactados",  en: "Contacted"  }, value: f.contacted, color: "bg-sky-500" },
     { key: "engaged",   label: { es: "Interesados",  en: "Engaged"    }, value: f.engaged,   color: "bg-amber-500" },
     { key: "callback",  label: { es: "Callback",     en: "Callback"   }, value: f.callback,  color: "bg-violet-500" },
@@ -239,18 +303,18 @@ function FunnelCard({ lang, forecast }: { lang: Lang; forecast: PipelineForecast
   ];
   const max = Math.max(...stages.map(s => s.value), 1);
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
+    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 p-4 shadow-sm dark:shadow-none">
       <div className="text-xs uppercase tracking-wide text-zinc-500 mb-3">
         {lang === "es" ? "Embudo (estado actual)" : "Funnel (current state)"}
       </div>
       <div className="space-y-1.5">
         {stages.map((s) => (
           <div key={s.key} className="flex items-center gap-2">
-            <div className="w-20 text-xs text-zinc-400 truncate">{s.label[lang]}</div>
-            <div className="flex-1 h-3 bg-zinc-800/50 rounded overflow-hidden">
-              <div className={`h-full ${s.color}/60`} style={{ width: `${(s.value / max) * 100}%` }} />
+            <div className="w-20 text-xs text-zinc-600 dark:text-zinc-400 truncate">{s.label[lang]}</div>
+            <div className="flex-1 h-3 bg-zinc-100 dark:bg-zinc-800/50 rounded overflow-hidden">
+              <div className={`h-full ${s.color} opacity-70`} style={{ width: `${(s.value / max) * 100}%` }} />
             </div>
-            <div className="w-12 text-right text-xs font-mono tabular-nums text-zinc-300">{s.value}</div>
+            <div className="w-12 text-right text-xs font-mono tabular-nums text-zinc-700 dark:text-zinc-300">{s.value}</div>
           </div>
         ))}
       </div>
@@ -262,15 +326,15 @@ function Row({ label, value, valueColor }: { label: string; value: string; value
   return (
     <div className="flex justify-between gap-3">
       <span className="text-zinc-500">{label}</span>
-      <span className={`font-mono tabular-nums ${valueColor ?? "text-zinc-300"}`}>{value}</span>
+      <span className={`font-mono tabular-nums ${valueColor ?? "text-zinc-700 dark:text-zinc-300"}`}>{value}</span>
     </div>
   );
 }
 
 function ChartCard({ title, children, fullWidth }: { title: string; children: React.ReactNode; fullWidth?: boolean }) {
   return (
-    <div className={`rounded-lg border border-zinc-800 p-5 ${fullWidth ? "" : ""}`}>
-      <h3 className="text-sm font-medium mb-4 text-zinc-300">{title}</h3>
+    <div className={`rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-transparent p-5 shadow-sm dark:shadow-none ${fullWidth ? "" : ""}`}>
+      <h3 className="text-sm font-medium mb-4 text-zinc-700 dark:text-zinc-300">{title}</h3>
       <div className="h-72">{children}</div>
     </div>
   );

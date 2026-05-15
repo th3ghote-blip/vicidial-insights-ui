@@ -60,10 +60,10 @@ export default function AgentsTab({
   return (
     <section className="space-y-5">
       <div>
-        <h2 className="text-xl font-semibold tracking-tight">
+        <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
           {lang === "es" ? "Agentes" : "Agents"}
         </h2>
-        <p className="text-sm text-zinc-400 mt-0.5">
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
           {lang === "es"
             ? `${agents.length} agentes activos · últimos 30 días`
             : `${agents.length} active agents · last 30 days`}
@@ -78,10 +78,10 @@ export default function AgentsTab({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={lang === "es" ? "Buscar agente…" : "Search agent…"}
-          className="w-full pl-9 pr-9 py-2 text-sm bg-zinc-900/60 border border-zinc-800 rounded-lg focus:outline-none focus:border-zinc-600 focus:bg-zinc-900 transition-colors placeholder:text-zinc-600"
+          className="w-full pl-9 pr-9 py-2 text-sm bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 transition-colors placeholder:text-zinc-400 dark:placeholder:text-zinc-600 text-zinc-900 dark:text-zinc-100"
         />
         {search && (
-          <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded hover:bg-zinc-800 flex items-center justify-center text-zinc-500">
+          <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-500">
             <X className="h-3.5 w-3.5" />
           </button>
         )}
@@ -99,21 +99,21 @@ export default function AgentsTab({
           return (
             <div
               key={a.user}
-              className="group rounded-xl border border-zinc-800/80 bg-gradient-to-br from-zinc-900/40 to-zinc-900/10 p-4 hover:border-zinc-700 hover:from-zinc-900/60 transition-all"
+              className="group rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-gradient-to-br dark:from-zinc-900/40 dark:to-zinc-900/10 p-4 hover:border-zinc-300 dark:hover:border-zinc-700 dark:hover:from-zinc-900/60 transition-all shadow-sm dark:shadow-none"
             >
               {/* Header row */}
               <div className="flex items-center gap-3 mb-3">
                 <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-semibold text-sm border ${
                   isLeader
                     ? "bg-gradient-to-br from-amber-400 to-amber-600 text-zinc-950 border-amber-500/50 shadow-lg shadow-amber-500/20"
-                    : "bg-zinc-800/60 text-zinc-400 border-zinc-700"
+                    : "bg-zinc-100 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700"
                 }`}>
                   {isLeader ? <Trophy className="h-4 w-4" /> : `#${rank + 1}`}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-zinc-100">{a.full_name}</span>
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100">{a.full_name}</span>
                     {m && <MomentumBadge momentum={m} lang={lang} />}
                   </div>
                   <div className="text-xs text-zinc-500 mt-0.5 flex items-center gap-3">
@@ -123,7 +123,7 @@ export default function AgentsTab({
                 </div>
 
                 <div className="text-right">
-                  <div className="text-2xl font-semibold tabular-nums text-emerald-300">{a.sales}</div>
+                  <div className="text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-300">{a.sales}</div>
                   <div className="text-[10px] uppercase tracking-wider text-zinc-500">
                     {lang === "es" ? "ventas" : "sales"}
                   </div>
@@ -132,7 +132,7 @@ export default function AgentsTab({
 
               {/* Close rate bar */}
               <div className="flex items-center gap-3 mb-3">
-                <div className="flex-1 h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
+                <div className="flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-800/80 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
                       isLeader
@@ -142,7 +142,7 @@ export default function AgentsTab({
                     style={{ width: `${widthPct}%` }}
                   />
                 </div>
-                <span className="text-sm font-mono tabular-nums text-zinc-200 w-14 text-right">
+                <span className="text-sm font-mono tabular-nums text-zinc-800 dark:text-zinc-200 w-14 text-right">
                   {ratePct.toFixed(1)}%
                 </span>
               </div>
@@ -165,14 +165,14 @@ export default function AgentsTab({
 
       {/* Efficiency table */}
       <div>
-        <h3 className="text-sm font-medium text-zinc-300 mb-3">
+        <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
           {lang === "es" ? "Comparativa de eficiencia" : "Efficiency comparison"}
         </h3>
-        <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/30">
+        <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/30">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-xs uppercase tracking-wider text-zinc-500">
+                <tr className="border-b border-zinc-200 dark:border-zinc-800 text-xs uppercase tracking-wider text-zinc-500">
                   <th className="px-4 py-2.5 text-left">{lang === "es" ? "Agente" : "Agent"}</th>
                   <SortHeader k="utilization" cur={sortKey} dir={sortDir} onClick={() => toggleSort("utilization")} label={lang === "es" ? "Utiliz." : "Utiliz."} />
                   <SortHeader k="calls"       cur={sortKey} dir={sortDir} onClick={() => toggleSort("calls")}       label={lang === "es" ? "Marc./hr" : "Dials/hr"} />
@@ -181,17 +181,17 @@ export default function AgentsTab({
                   <SortHeader k="close_rate"  cur={sortKey} dir={sortDir} onClick={() => toggleSort("close_rate")}  label={lang === "es" ? "Cierre" : "Close %"} />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/60">
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
                 {sorted.map((a) => (
-                  <tr key={a.user} className="hover:bg-zinc-900/50 transition-colors">
-                    <td className="px-4 py-2.5 font-medium text-zinc-200">{a.full_name}</td>
+                  <tr key={a.user} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                    <td className="px-4 py-2.5 font-medium text-zinc-800 dark:text-zinc-200">{a.full_name}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums">
                       <span className={utilColor(a.utilization_rate)}>{((a.utilization_rate ?? 0) * 100).toFixed(0)}%</span>
                     </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-sky-300">{a.dials_per_hour ?? 0}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-zinc-400">{Math.floor((a.pause_seconds ?? 0) / 60)}m</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-violet-300">{a.callbacks_converted ?? 0}/{a.callbacks_set ?? 0}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-emerald-300 font-medium">{(a.close_rate * 100).toFixed(1)}%</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-sky-600 dark:text-sky-300">{a.dials_per_hour ?? 0}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-zinc-600 dark:text-zinc-400">{Math.floor((a.pause_seconds ?? 0) / 60)}m</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-violet-600 dark:text-violet-300">{a.callbacks_converted ?? 0}/{a.callbacks_set ?? 0}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-emerald-600 dark:text-emerald-300 font-medium">{(a.close_rate * 100).toFixed(1)}%</td>
                   </tr>
                 ))}
               </tbody>
@@ -238,14 +238,14 @@ function Metric({ icon: Icon, label, value, color = "zinc" }: {
   icon: React.ElementType; label: string; value: string; color?: string;
 }) {
   const colors: Record<string, string> = {
-    zinc:    "text-zinc-300",
-    emerald: "text-emerald-300",
-    amber:   "text-amber-300",
-    red:     "text-red-400",
-    violet:  "text-violet-300",
+    zinc:    "text-zinc-700 dark:text-zinc-300",
+    emerald: "text-emerald-600 dark:text-emerald-300",
+    amber:   "text-amber-600 dark:text-amber-300",
+    red:     "text-red-500 dark:text-red-400",
+    violet:  "text-violet-600 dark:text-violet-300",
   };
   return (
-    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-zinc-900/50 border border-zinc-800/60">
+    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/60">
       <Icon className="h-3.5 w-3.5 text-zinc-500" strokeWidth={2} />
       <div className="min-w-0 flex-1">
         <div className="text-[10px] uppercase tracking-wider text-zinc-500 leading-none">{label}</div>
