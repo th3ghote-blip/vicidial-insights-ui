@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import type { Lead, AgentStat, Disposition, CallHour, SalesDay, WeeklyInsight, Health, CampaignStat } from "@/lib/api";
+import type {
+  Lead, AgentStat, Disposition, CallHour, SalesDay, WeeklyInsight, Health, CampaignStat,
+  AgentMomentum, SourceROI, PipelineForecast, ContactVelocity, Alert,
+} from "@/lib/api";
 import { t, type Lang } from "@/lib/i18n";
 import KpiStrip from "./KpiStrip";
 import AiBanner from "./AiBanner";
 import LeadsTab from "./LeadsTab";
 import AgentsTab from "./AgentsTab";
 import InsightsTab from "./InsightsTab";
+import AlertsTab from "./AlertsTab";
 
 type Props = {
   initialLang: Lang;
@@ -19,13 +23,19 @@ type Props = {
   salesTrend: SalesDay[];
   weekly: WeeklyInsight;
   campaigns: CampaignStat[];
+  momentum: AgentMomentum[];
+  sources: SourceROI[];
+  forecast: PipelineForecast;
+  velocity: ContactVelocity;
+  alerts: Alert[];
 };
 
-type TabKey = "leads" | "agents" | "insights";
+type TabKey = "alerts" | "leads" | "agents" | "insights";
 
 export default function Dashboard(props: Props) {
   const [lang, setLang] = useState<Lang>(props.initialLang);
-  const [tab, setTab] = useState<TabKey>("leads");
+  const [tab, setTab] = useState<TabKey>("alerts");
+  const urgentCount = props.alerts.filter(a => a.severity === "high").length;
   const tr = t[lang];
 
   return (
@@ -37,13 +47,18 @@ export default function Dashboard(props: Props) {
           <div className="font-semibold leading-tight">{tr.appName}</div>
           <div className="text-xs text-zinc-500 mt-0.5">{tr.subtitle}</div>
         </div>
-        {(["leads", "agents", "insights"] as const).map(k => (
+        {(["alerts", "leads", "agents", "insights"] as const).map(k => (
           <button
             key={k}
             onClick={() => setTab(k)}
-            className={`text-left px-3 py-2 rounded text-sm transition-colors ${tab === k ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-900"}`}
+            className={`text-left px-3 py-2 rounded text-sm transition-colors flex items-center justify-between ${tab === k ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white hover:bg-zinc-900"}`}
           >
-            {tr.nav[k]}
+            <span>{tr.nav[k]}</span>
+            {k === "alerts" && urgentCount > 0 && (
+              <span className="text-[10px] font-mono px-1.5 py-px rounded bg-red-500/20 text-red-300 border border-red-500/30">
+                {urgentCount}
+              </span>
+            )}
           </button>
         ))}
         <div className="flex-1" />
@@ -73,10 +88,15 @@ export default function Dashboard(props: Props) {
             </div>
           </div>
           {/* Mobile tabs */}
-          <nav className="md:hidden px-6 flex gap-1 border-t border-zinc-900">
-            {(["leads", "agents", "insights"] as const).map(k => (
-              <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 text-sm border-b-2 ${tab === k ? "border-emerald-400 text-white" : "border-transparent text-zinc-400"}`}>
+          <nav className="md:hidden px-6 flex gap-1 border-t border-zinc-900 overflow-x-auto">
+            {(["alerts", "leads", "agents", "insights"] as const).map(k => (
+              <button key={k} onClick={() => setTab(k)} className={`px-4 py-2 text-sm border-b-2 whitespace-nowrap ${tab === k ? "border-emerald-400 text-white" : "border-transparent text-zinc-400"}`}>
                 {tr.nav[k]}
+                {k === "alerts" && urgentCount > 0 && (
+                  <span className="ml-1.5 text-[10px] font-mono px-1.5 py-px rounded bg-red-500/20 text-red-300">
+                    {urgentCount}
+                  </span>
+                )}
               </button>
             ))}
           </nav>
@@ -84,9 +104,12 @@ export default function Dashboard(props: Props) {
 
         <main className="px-6 py-6 space-y-6 max-w-7xl">
           <KpiStrip lang={lang} leads={props.leads} agents={props.agents} salesTrend={props.salesTrend} />
-          {tab !== "insights" && <AiBanner lang={lang} weekly={props.weekly} compact />}
+          {tab !== "insights" && tab !== "alerts" && <AiBanner lang={lang} weekly={props.weekly} compact />}
+          {tab === "alerts" && <AlertsTab lang={lang} alerts={props.alerts} />}
           {tab === "leads" && <LeadsTab lang={lang} leads={props.leads} />}
-          {tab === "agents" && <AgentsTab lang={lang} agents={props.agents} />}
+          {tab === "agents" && (
+            <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} />
+          )}
           {tab === "insights" && (
             <InsightsTab
               lang={lang}
@@ -95,6 +118,9 @@ export default function Dashboard(props: Props) {
               callTimes={props.callTimes}
               salesTrend={props.salesTrend}
               campaigns={props.campaigns}
+              sources={props.sources}
+              forecast={props.forecast}
+              velocity={props.velocity}
             />
           )}
         </main>

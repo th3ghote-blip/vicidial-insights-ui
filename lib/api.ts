@@ -88,6 +88,67 @@ export type CampaignStat = {
   cost_per_lead_usd: number;
 };
 
+export type AgentMomentum = {
+  user: string;
+  full_name: string;
+  current_close_rate: number;
+  prior_avg_close_rate: number;
+  change_pct: number;
+  status: "rising_star" | "needs_attention" | "cooling" | "on_streak" | "stable";
+  weekly_series: number[];
+};
+
+export type SourceROI = {
+  source: string;
+  leads_total: number;
+  leads_contacted: number;
+  contact_rate: number;
+  sales: number;
+  conversion_rate: number;
+  cost_per_lead_usd: number;
+  cost_total_usd: number;
+  cost_per_sale_usd: number;
+};
+
+export type PipelineForecast = {
+  callbacks_scheduled_next_7d: number;
+  historical_callback_conversion: number;
+  expected_callback_sales: number;
+  fresh_leads_next_7d: number;
+  expected_fresh_sales: number;
+  expected_total_sales: number;
+  last_week_sales: number;
+  delta_vs_last_week_pct: number;
+  funnel: { new: number; contacted: number; engaged: number; callback: number; sold_7d: number };
+};
+
+export type ContactVelocity = {
+  avg_hours_to_first_contact: number;
+  median_hours_to_first_contact: number;
+  leads_stuck_no_contact: number;
+  stuck_threshold_hours: number;
+  conversion_by_age: { age_bucket: string; count: number; conversion_rate: number }[];
+  alert: boolean;
+};
+
+export type AgentCampaignCell = {
+  user: string;
+  full_name: string;
+  campaign_id: string;
+  campaign_name: string;
+  calls: number;
+  sales: number;
+  close_rate: number;
+};
+
+export type Alert = {
+  severity: "high" | "medium" | "low" | "positive";
+  type: "agent_trend" | "lead_source" | "forecast" | "contact_velocity" | "campaign" | "dialer";
+  title: string;
+  message: string;
+  action?: string;
+};
+
 export type Disposition = { dispo: string; count: number };
 export type CallHour = { hour: number; calls: number; sales: number };
 export type SalesDay = { date: string; sales: number; calls?: number };
@@ -125,4 +186,15 @@ export const api = {
   campaigns: () => fetchJSON<{ campaigns: Campaign[] }>(`/campaigns`),
   campaignPerformance: (daysBack = 30) =>
     fetchJSON<{ campaigns: CampaignStat[] }>(`/campaigns/performance?days_back=${daysBack}`),
+  agentMomentum: (weeksBack = 4) =>
+    fetchJSON<{ agents: AgentMomentum[] }>(`/agents/momentum?weeks_back=${weeksBack}`),
+  leadSources: (daysBack = 30) =>
+    fetchJSON<{ sources: SourceROI[] }>(`/insights/sources?days_back=${daysBack}`),
+  forecast: () => fetchJSON<PipelineForecast>(`/insights/forecast`),
+  contactVelocity: (daysBack = 7) =>
+    fetchJSON<ContactVelocity>(`/insights/contact-velocity?days_back=${daysBack}`),
+  agentCampaignMatrix: (daysBack = 30) =>
+    fetchJSON<{ matrix: AgentCampaignCell[] }>(`/agents/by-campaign?days_back=${daysBack}`),
+  alerts: (lang: "es" | "en" = "es") =>
+    fetchJSON<{ lang: string; count: number; alerts: Alert[] }>(`/insights/alerts?lang=${lang}`, 300),
 };

@@ -7,7 +7,7 @@ export const t = {
     refresh: "Actualizar",
     loading: "Cargando…",
     error: "Error",
-    nav: { leads: "Leads", agents: "Agentes", insights: "Análisis" },
+    nav: { alerts: "Alertas", leads: "Leads", agents: "Agentes", insights: "Análisis" },
     kpi: {
       hotLeads: "Leads calientes",
       conversion: "Conversión 7d",
@@ -54,7 +54,7 @@ export const t = {
     refresh: "Refresh",
     loading: "Loading…",
     error: "Error",
-    nav: { leads: "Leads", agents: "Agents", insights: "Insights" },
+    nav: { alerts: "Alerts", leads: "Leads", agents: "Agents", insights: "Insights" },
     kpi: {
       hotLeads: "Hot leads",
       conversion: "Conv. 7d",

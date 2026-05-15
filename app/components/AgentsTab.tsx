@@ -1,6 +1,6 @@
 "use client";
 
-import type { AgentStat } from "@/lib/api";
+import type { AgentStat, AgentMomentum } from "@/lib/api";
 import { t, type Lang } from "@/lib/i18n";
 
 function fmtMin(sec: number) {
@@ -10,9 +10,18 @@ function fmtHr(sec: number) {
   return `${(sec / 3600).toFixed(1)}h`;
 }
 
-export default function AgentsTab({ lang, agents }: { lang: Lang; agents: AgentStat[] }) {
+const MOMENTUM_BADGE: Record<AgentMomentum["status"], { label: { es: string; en: string }; color: string; icon: string }> = {
+  rising_star:     { label: { es: "Estrella en alza", en: "Rising star"     }, color: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", icon: "▲" },
+  on_streak:       { label: { es: "En racha",         en: "Hot streak"      }, color: "bg-amber-500/15 text-amber-300 border-amber-500/30",       icon: "★" },
+  stable:          { label: { es: "Estable",          en: "Stable"          }, color: "bg-zinc-700/40 text-zinc-400 border-zinc-700",             icon: "→" },
+  cooling:         { label: { es: "Enfriándose",      en: "Cooling"         }, color: "bg-amber-500/10 text-amber-400 border-amber-500/20",       icon: "↘" },
+  needs_attention: { label: { es: "Necesita atención",en: "Needs attention" }, color: "bg-red-500/15 text-red-300 border-red-500/30",             icon: "▼" },
+};
+
+export default function AgentsTab({ lang, agents, momentum }: { lang: Lang; agents: AgentStat[]; momentum: AgentMomentum[] }) {
   const tr = t[lang];
   const maxRate = Math.max(...agents.map(a => a.close_rate), 0.0001);
+  const momMap = new Map(momentum.map(m => [m.user, m]));
 
   return (
     <section className="space-y-6">
@@ -29,12 +38,25 @@ export default function AgentsTab({ lang, agents }: { lang: Lang; agents: AgentS
 
           return (
             <div key={a.user} className="px-4 py-3 hover:bg-zinc-900/40">
-              {/* Row 1: rank + name + sales */}
+              {/* Row 1: rank + name + momentum + sales */}
               <div className="flex items-center gap-3 mb-1">
                 <span className={`w-6 text-center text-sm font-mono ${isLeader ? "text-amber-300" : "text-zinc-500"}`}>
                   #{i + 1}
                 </span>
-                <span className="flex-1 font-medium">{a.full_name}</span>
+                <span className="font-medium">{a.full_name}</span>
+                {(() => {
+                  const m = momMap.get(a.user);
+                  if (!m) return null;
+                  const b = MOMENTUM_BADGE[m.status];
+                  return (
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] ${b.color}`}>
+                      <span>{b.icon}</span>
+                      <span>{b.label[lang]}</span>
+                      <span className="font-mono ml-0.5">{m.change_pct >= 0 ? "+" : ""}{m.change_pct.toFixed(1)}%</span>
+                    </span>
+                  );
+                })()}
+                <span className="flex-1" />
                 <span className="font-mono text-emerald-300 tabular-nums">{a.sales}</span>
                 <span className="text-xs text-zinc-500 w-16 text-right">{tr.agentCol.sales.toLowerCase()}</span>
               </div>

@@ -2,7 +2,10 @@ import { api } from "@/lib/api";
 import Dashboard from "@/app/components/Dashboard";
 
 export default async function HomePage() {
-  const [health, leadsRes, agentsRes, disposRes, callTimesRes, salesRes, weekly, campaignsRes] = await Promise.all([
+  const [
+    health, leadsRes, agentsRes, disposRes, callTimesRes, salesRes,
+    weekly, campaignsRes, momentumRes, sourcesRes, forecast, velocity, alertsRes,
+  ] = await Promise.all([
     api.health(),
     api.leads(100, 30),
     api.agents(30),
@@ -11,6 +14,11 @@ export default async function HomePage() {
     api.salesTrend(30),
     api.weekly("es"),
     api.campaignPerformance(30),
+    api.agentMomentum(4),
+    api.leadSources(30),
+    api.forecast(),
+    api.contactVelocity(7),
+    api.alerts("es"),
   ]);
 
   return (
@@ -24,6 +32,11 @@ export default async function HomePage() {
       salesTrend={salesRes.days}
       weekly={weekly}
       campaigns={campaignsRes.campaigns}
+      momentum={momentumRes.agents}
+      sources={sourcesRes.sources}
+      forecast={forecast}
+      velocity={velocity}
+      alerts={alertsRes.alerts}
     />
   );
 }
