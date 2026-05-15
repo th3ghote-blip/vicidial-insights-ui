@@ -22,8 +22,8 @@ const MOMENTUM_META: Record<AgentMomentum["status"], {
 };
 
 export default function AgentsTab({
-  lang, agents, momentum,
-}: { lang: Lang; agents: AgentStat[]; momentum: AgentMomentum[] }) {
+  lang, agents, momentum, range,
+}: { lang: Lang; agents: AgentStat[]; momentum: AgentMomentum[]; range: number }) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("rank");
   const [sortDir, setSortDir] = useState<"asc"|"desc">("desc");
@@ -101,8 +101,8 @@ export default function AgentsTab({
         </h2>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
           {lang === "es"
-            ? `${agents.length} agentes activos · últimos 30 días`
-            : `${agents.length} active agents · last 30 days`}
+            ? `${agents.length} agentes activos · últimos ${range} días`
+            : `${agents.length} active agents · last ${range} days`}
         </p>
       </div>
 

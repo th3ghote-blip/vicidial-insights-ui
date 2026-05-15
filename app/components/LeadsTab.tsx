@@ -7,7 +7,7 @@ import { t, type Lang, recLabel, recColor, scoreColor, fmtRelative } from "@/lib
 
 type RecFilter = "all" | Lead["recommendation"];
 
-export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] }) {
+export default function LeadsTab({ lang, leads, range, rangeLabel }: { lang: Lang; leads: Lead[]; range?: number; rangeLabel?: "today" | number | "custom" }) {
   const tr = t[lang];
   const [selected, setSelected] = useState<Lead | null>(null);
   const [search, setSearch] = useState("");
@@ -51,7 +51,11 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
       <div>
         <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">{tr.leadsHeader}</h2>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-          {tr.leadsSub} · {filtered.length} {lang === "es" ? "de" : "of"} {leads.length}
+          {tr.leadsSub}
+          {" · "}
+          {rangeLabel === "today" ? (lang === "es" ? "hoy" : "today") : rangeLabel === "custom" ? (lang === "es" ? "rango personalizado" : "custom range") : `${lang === "es" ? "últimos" : "last"} ${range}d`}
+          {" · "}
+          {filtered.length} {lang === "es" ? "de" : "of"} {leads.length}
         </p>
       </div>
 

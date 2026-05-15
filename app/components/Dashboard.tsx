@@ -334,8 +334,8 @@ export default function Dashboard(props: Props) {
           {tab !== "insights" && tab !== "alerts" && tab !== "summary" && <AiBanner lang={lang} weekly={props.weekly} compact />}
           {tab === "summary"  && <SummaryTab lang={lang} salesTrend={props.salesTrend} callTimes={props.callTimes} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
           {tab === "alerts"   && <AlertsTab lang={lang} alerts={props.alerts} onJump={setTab} />}
-          {tab === "leads"    && <LeadsTab lang={lang} leads={props.leads} />}
-          {tab === "agents"   && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} />}
+          {tab === "leads"    && <LeadsTab lang={lang} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
+          {tab === "agents"   && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} range={props.initialRange} />}
           {tab === "insights" && (
             <InsightsTab
               lang={lang}
