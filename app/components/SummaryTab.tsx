@@ -12,7 +12,7 @@ export default function SummaryTab({
   campaigns: CampaignStat[];
   agents: AgentStat[];
   leads: Lead[];
-  range: 7 | 30 | 90;
+  range: number;
 }) {
   const tr = t[lang];
 
@@ -34,7 +34,7 @@ export default function SummaryTab({
   const trendDelta = yesterdaySales > 0 ? (((todaySales - yesterdaySales) / yesterdaySales) * 100).toFixed(1) : "0";
 
   // Campaign ranking by sales
-  const campaignsByRevenue = [...campaigns].sort((a, b) => b.sales - a.sales);
+  const campaignsByRevenue = [...campaigns].sort((a, b) => b.total_sales - a.total_sales);
 
   // Chart data - last 7 days for context
   const last7 = salesTrend.slice(-7);
@@ -65,7 +65,7 @@ export default function SummaryTab({
         <MetricCard
           label={lang === "es" ? "Ventas totales" : "Total sales"}
           value={totalSales.toLocaleString()}
-          sub={lang === "es" ? `${avgDailySales}/día promedio` : `${avgDailySales}/day avg`}
+          sub={lang === "es" ? `vs ayer: ${trendUp ? "+" : ""}${trendDelta}%` : `vs yesterday: ${trendUp ? "+" : ""}${trendDelta}%`}
         />
         <MetricCard
           label={lang === "es" ? "Llamadas" : "Calls"}
@@ -134,23 +134,20 @@ export default function SummaryTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
-              {campaignsByRevenue.map((c) => {
-                const closeRate = c.calls_handled > 0 ? ((c.sales / c.calls_handled) * 100).toFixed(1) : "0";
-                return (
+              {campaignsByRevenue.map((c) => (
                   <tr key={c.campaign_id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/60 transition-colors">
-                    <td className="px-4 py-2.5 font-medium text-zinc-900 dark:text-zinc-100">{c.campaign_id}</td>
+                    <td className="px-4 py-2.5 font-medium text-zinc-900 dark:text-zinc-100">{c.campaign_name || c.campaign_id}</td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-emerald-700 dark:text-emerald-300 font-semibold">
-                      {c.sales.toLocaleString()}
+                      {c.total_sales.toLocaleString()}
                     </td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-300">
-                      {c.calls_handled.toLocaleString()}
+                      {c.total_dials.toLocaleString()}
                     </td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-sky-700 dark:text-sky-300">
-                      {closeRate}%
+                      {(c.conversion_rate * 100).toFixed(1)}%
                     </td>
                   </tr>
-                );
-              })}
+              ))}
             </tbody>
           </table>
         </div>
