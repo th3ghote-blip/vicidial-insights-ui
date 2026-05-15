@@ -5,8 +5,8 @@ import type { Lead, AgentStat, SalesDay, PipelineForecast } from "@/lib/api";
 import { t, type Lang } from "@/lib/i18n";
 
 export default function KpiStrip({
-  lang, leads, agents, salesTrend, forecast,
-}: { lang: Lang; leads: Lead[]; agents: AgentStat[]; salesTrend: SalesDay[]; forecast: PipelineForecast }) {
+  lang, leads, agents, salesTrend, forecast, range,
+}: { lang: Lang; leads: Lead[]; agents: AgentStat[]; salesTrend: SalesDay[]; forecast: PipelineForecast; range: 7 | 30 | 90 }) {
   const tr = t[lang].kpi;
   const hot = leads.filter(l => l.score >= 60).length;
   const totalSales = salesTrend.reduce((s, d) => s + d.sales, 0);
@@ -17,9 +17,13 @@ export default function KpiStrip({
   // Mini sparkline data — last 14 days
   const sparkData = salesTrend.slice(-14).map(d => d.sales);
 
+  const rangeLabel = lang === "es"
+    ? { 7: "últimos 7 días", 30: "últimos 30 días", 90: "últimos 90 días" }
+    : { 7: "last 7 days", 30: "last 30 days", 90: "last 90 days" };
+
   const subs = lang === "es"
-    ? { of: "de", total: "totales", sales: "ventas", last7: "últimos 7 días", close: "cierre" }
-    : { of: "of", total: "total", sales: "sales", last7: "last 7 days", close: "close rate" };
+    ? { of: "de", total: "totales", sales: "ventas", lastN: rangeLabel[range], close: "cierre" }
+    : { of: "of", total: "total", sales: "sales", lastN: rangeLabel[range], close: "close rate" };
 
   const cards = [
     {
@@ -44,7 +48,7 @@ export default function KpiStrip({
     {
       label: tr.callsToday,
       value: totalCalls.toLocaleString(),
-      sub: subs.last7,
+      sub: subs.lastN,
       icon: Phone,
       iconBg: "bg-zinc-700/40",
       iconColor: "text-zinc-300",
