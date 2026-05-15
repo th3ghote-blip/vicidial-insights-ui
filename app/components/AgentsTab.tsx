@@ -14,11 +14,11 @@ type StatusFilter = "all" | AgentMomentum["status"];
 const MOMENTUM_META: Record<AgentMomentum["status"], {
   labelEs: string; labelEn: string; color: string; ring: string; icon: React.ElementType;
 }> = {
-  rising_star:     { labelEs: "Estrella en alza", labelEn: "Rising star",     color: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30", ring: "ring-emerald-500/40", icon: Star },
-  on_streak:       { labelEs: "En racha",         labelEn: "Hot streak",      color: "bg-amber-500/15 text-amber-300 border-amber-500/30",       ring: "ring-amber-500/40",   icon: TrendingUp },
-  stable:          { labelEs: "Estable",          labelEn: "Stable",          color: "bg-zinc-700/40 text-zinc-400 border-zinc-700",             ring: "ring-zinc-700",       icon: Minus },
-  cooling:         { labelEs: "Enfriándose",      labelEn: "Cooling",         color: "bg-amber-500/10 text-amber-400 border-amber-500/20",       ring: "ring-amber-500/20",   icon: TrendingDown },
-  needs_attention: { labelEs: "Necesita atención",labelEn: "Needs attention", color: "bg-red-500/15 text-red-300 border-red-500/30",             ring: "ring-red-500/40",     icon: AlertTriangle },
+  rising_star:     { labelEs: "Estrella en alza", labelEn: "Rising star",     color: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30", ring: "ring-emerald-500/40", icon: Star },
+  on_streak:       { labelEs: "En racha",         labelEn: "Hot streak",      color: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",       ring: "ring-amber-500/40",   icon: TrendingUp },
+  stable:          { labelEs: "Estable",          labelEn: "Stable",          color: "bg-zinc-700/40 text-zinc-700 dark:text-zinc-400 border-zinc-700",             ring: "ring-zinc-700",       icon: Minus },
+  cooling:         { labelEs: "Enfriándose",      labelEn: "Cooling",         color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",       ring: "ring-amber-500/20",   icon: TrendingDown },
+  needs_attention: { labelEs: "Necesita atención",labelEn: "Needs attention", color: "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30",             ring: "ring-red-500/40",     icon: AlertTriangle },
 };
 
 export default function AgentsTab({
@@ -281,10 +281,10 @@ export default function AgentsTab({
                     <td className="px-4 py-2.5 text-right tabular-nums">
                       <span className={utilColor(a.utilization_rate)}>{((a.utilization_rate ?? 0) * 100).toFixed(0)}%</span>
                     </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-sky-600 dark:text-sky-300">{a.dials_per_hour ?? 0}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-zinc-600 dark:text-zinc-400">{Math.floor((a.pause_seconds ?? 0) / 60)}m</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-violet-600 dark:text-violet-300">{a.callbacks_converted ?? 0}/{a.callbacks_set ?? 0}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-emerald-600 dark:text-emerald-300 font-medium">{(a.close_rate * 100).toFixed(1)}%</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-sky-700 dark:text-sky-300">{a.dials_per_hour ?? 0}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-400">{Math.floor((a.pause_seconds ?? 0) / 60)}m</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-violet-700 dark:text-violet-300">{a.callbacks_converted ?? 0}/{a.callbacks_set ?? 0}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-emerald-700 dark:text-emerald-300 font-medium">{(a.close_rate * 100).toFixed(1)}%</td>
                   </tr>
                 ))}
               </tbody>
@@ -331,17 +331,17 @@ function Metric({ icon: Icon, label, value, color = "zinc" }: {
   icon: React.ElementType; label: string; value: string; color?: string;
 }) {
   const colors: Record<string, string> = {
-    zinc:    "text-zinc-700 dark:text-zinc-300",
-    emerald: "text-emerald-600 dark:text-emerald-300",
-    amber:   "text-amber-600 dark:text-amber-300",
-    red:     "text-red-500 dark:text-red-400",
-    violet:  "text-violet-600 dark:text-violet-300",
+    zinc:    "text-zinc-800 dark:text-zinc-300",
+    emerald: "text-emerald-700 dark:text-emerald-300",
+    amber:   "text-amber-700 dark:text-amber-300",
+    red:     "text-red-700 dark:text-red-400",
+    violet:  "text-violet-700 dark:text-violet-300",
   };
   return (
     <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/60">
       <Icon className="h-3.5 w-3.5 text-zinc-500" strokeWidth={2} />
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] uppercase tracking-wider text-zinc-600 dark:text-zinc-500 leading-none">{label}</div>
+        <div className="text-[10px] uppercase tracking-wider text-zinc-700 dark:text-zinc-500 leading-none">{label}</div>
         <div className={`text-xs font-mono tabular-nums leading-tight mt-0.5 ${colors[color] ?? colors.zinc}`}>{value}</div>
       </div>
     </div>
@@ -363,7 +363,7 @@ function SortHeader({ k, cur, dir, onClick, label }: {
 }
 
 function utilColor(rate: number) {
-  if (rate >= 0.70) return "text-emerald-300";
-  if (rate >= 0.50) return "text-amber-300";
-  return "text-red-400";
+  if (rate >= 0.70) return "text-emerald-700 dark:text-emerald-300";
+  if (rate >= 0.50) return "text-amber-700 dark:text-amber-300";
+  return "text-red-700 dark:text-red-400";
 }
