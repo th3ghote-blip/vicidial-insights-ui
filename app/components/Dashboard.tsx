@@ -21,7 +21,10 @@ import AlertsTab from "./AlertsTab";
 
 type Props = {
   initialLang: Lang;
-  initialRange: 7 | 30 | 90;
+  initialRange: number;
+  initialRangeLabel?: "today" | 7 | 30 | 90 | "custom";
+  initialStartDate?: string;
+  initialEndDate?: string;
   health: Health;
   leads: Lead[];
   agents: AgentStat[];
@@ -64,6 +67,9 @@ export default function Dashboard(props: Props) {
     if (typeof window === "undefined") return "dark";
     return (localStorage.getItem("theme") as Theme) || "dark";
   });
+  const [showCustomDate, setShowCustomDate] = useState(false);
+  const [customStart, setCustomStart] = useState(props.initialStartDate || "");
+  const [customEnd, setCustomEnd] = useState(props.initialEndDate || "");
   const tr = t[lang];
   const urgentCount = props.alerts.filter(a => a.severity === "high").length;
 
@@ -86,9 +92,20 @@ export default function Dashboard(props: Props) {
     startTransition(() => router.push(`${pathname}?${params.toString()}`));
   };
 
-  const setRange = (r: 7 | 30 | 90) => {
+  const setRange = (r: 7 | 30 | 90 | "today") => {
     const params = new URLSearchParams(searchParams.toString());
+    params.delete("startDate");
+    params.delete("endDate");
     params.set("range", String(r));
+    startTransition(() => router.push(`${pathname}?${params.toString()}`));
+  };
+
+  const setCustomRange = (start: string, end: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("range");
+    params.set("startDate", start);
+    params.set("endDate", end);
+    setShowCustomDate(false);
     startTransition(() => router.push(`${pathname}?${params.toString()}`));
   };
 
@@ -181,15 +198,26 @@ export default function Dashboard(props: Props) {
 
             <div className="flex-1" />
 
-            {/* Time range — actually wired to URL */}
+            {/* Time range — wired to URL */}
             <div className="hidden sm:flex border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden text-xs bg-white dark:bg-zinc-900/60 relative">
+              <button
+                onClick={() => setRange("today")}
+                disabled={isPending}
+                className={`px-2.5 py-1.5 transition-colors disabled:opacity-50 ${
+                  props.initialRangeLabel === "today"
+                    ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                }`}
+              >
+                Today
+              </button>
               {([7, 30, 90] as const).map(r => (
                 <button
                   key={r}
                   onClick={() => setRange(r)}
                   disabled={isPending}
                   className={`px-3 py-1.5 transition-colors disabled:opacity-50 ${
-                    props.initialRange === r
+                    props.initialRangeLabel === r
                       ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white"
                       : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
                   }`}
@@ -197,12 +225,73 @@ export default function Dashboard(props: Props) {
                   {r}d
                 </button>
               ))}
+              <button
+                onClick={() => setShowCustomDate(!showCustomDate)}
+                disabled={isPending}
+                className={`px-2.5 py-1.5 transition-colors disabled:opacity-50 ${
+                  props.initialRangeLabel === "custom"
+                    ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                }`}
+              >
+                Custom
+              </button>
               {isPending && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/40 dark:bg-zinc-900/40">
                   <Loader2 className="h-3 w-3 animate-spin text-zinc-500" />
                 </div>
               )}
             </div>
+
+            {/* Custom date range modal */}
+            {showCustomDate && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowCustomDate(false)}>
+                <div className="bg-white dark:bg-zinc-900 rounded-lg p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
+                    {lang === "es" ? "Rango personalizado" : "Custom date range"}
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-zinc-600 dark:text-zinc-400 block mb-1">
+                        {lang === "es" ? "Desde" : "From"}
+                      </label>
+                      <input
+                        type="date"
+                        value={customStart}
+                        onChange={(e) => setCustomStart(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-zinc-600 dark:text-zinc-400 block mb-1">
+                        {lang === "es" ? "Hasta" : "To"}
+                      </label>
+                      <input
+                        type="date"
+                        value={customEnd}
+                        onChange={(e) => setCustomEnd(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white"
+                      />
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <button
+                        onClick={() => setShowCustomDate(false)}
+                        className="flex-1 px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                      >
+                        {lang === "es" ? "Cancelar" : "Cancel"}
+                      </button>
+                      <button
+                        onClick={() => customStart && customEnd && setCustomRange(customStart, customEnd)}
+                        disabled={!customStart || !customEnd}
+                        className="flex-1 px-3 py-2 text-sm bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-400 text-white rounded-lg transition-colors"
+                      >
+                        {lang === "es" ? "Aplicar" : "Apply"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Language toggle */}
             <div className="flex border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden text-xs bg-white dark:bg-zinc-900/60">
