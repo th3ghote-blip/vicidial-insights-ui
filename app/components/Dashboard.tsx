@@ -143,7 +143,7 @@ export default function Dashboard(props: Props) {
       {/* ────────── Main ────────── */}
       <div className="flex-1 min-w-0">
         <header className="border-b border-zinc-200 dark:border-zinc-800/80 bg-white/80 dark:bg-zinc-950/70 backdrop-blur-xl sticky top-0 z-20">
-          <div className="px-6 py-3 flex items-center gap-4">
+          <div className="px-4 sm:px-6 py-3 flex items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-2 md:hidden">
               <Sparkles className="h-5 w-5 text-emerald-500 dark:text-emerald-400" strokeWidth={2.5} />
               <span className="font-medium text-sm">{tr.appName}</span>
@@ -226,7 +226,7 @@ export default function Dashboard(props: Props) {
           </nav>
         </header>
 
-        <main className="px-6 py-6 space-y-6 max-w-7xl mx-auto">
+        <main className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
           <KpiStrip lang={lang} leads={props.leads} agents={props.agents} salesTrend={props.salesTrend} forecast={props.forecast} />
           {tab !== "insights" && tab !== "alerts" && <AiBanner lang={lang} weekly={props.weekly} compact />}
           {tab === "alerts"   && <AlertsTab lang={lang} alerts={props.alerts} onJump={setTab} />}

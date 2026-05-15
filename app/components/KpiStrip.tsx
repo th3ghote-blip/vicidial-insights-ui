@@ -66,22 +66,22 @@ export default function KpiStrip({
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         {cards.map((c, i) => {
           const Icon = c.icon;
           return (
             <div
               key={i}
-              className="group relative rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-gradient-to-br dark:from-zinc-900/60 dark:to-zinc-900/20 p-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all shadow-sm dark:shadow-none"
+              className="group relative rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-gradient-to-br dark:from-zinc-900/60 dark:to-zinc-900/20 p-3 sm:p-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all shadow-sm dark:shadow-none"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className={`h-8 w-8 rounded-lg ${c.iconBg} flex items-center justify-center`}>
-                  <Icon className={`h-4 w-4 ${c.iconColor}`} strokeWidth={2} />
+              <div className="flex items-start justify-between mb-2 sm:mb-3">
+                <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-lg ${c.iconBg} flex items-center justify-center`}>
+                  <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${c.iconColor}`} strokeWidth={2} />
                 </div>
                 {c.sparkline && <Sparkline data={c.sparkline} />}
               </div>
-              <div className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">{c.label}</div>
-              <div className={`text-2xl font-semibold tabular-nums ${c.valueColor}`}>{c.value}</div>
+              <div className="text-[10px] sm:text-[11px] uppercase tracking-wider text-zinc-500 font-semibold mb-0.5 sm:mb-1 truncate">{c.label}</div>
+              <div className={`text-xl sm:text-2xl font-semibold tabular-nums truncate ${c.valueColor}`}>{c.value}</div>
               {c.sub && <div className="text-xs text-zinc-500 mt-1">{c.sub}</div>}
             </div>
           );
