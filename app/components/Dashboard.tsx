@@ -54,7 +54,10 @@ export default function Dashboard(props: Props) {
   const [isPending, startTransition] = useTransition();
 
   const [lang, setLang] = useState<Lang>(props.initialLang);
-  const [tab, setTab] = useState<TabKey>("alerts");
+  const [tab, setTabState] = useState<TabKey>(() => {
+    const tabParam = searchParams.get("tab") as TabKey | null;
+    return tabParam && ["alerts", "leads", "agents", "insights"].includes(tabParam) ? tabParam : "alerts";
+  });
   const [theme, setTheme] = useState<Theme>("dark");
   const tr = t[lang];
   const urgentCount = props.alerts.filter(a => a.severity === "high").length;
@@ -71,6 +74,13 @@ export default function Dashboard(props: Props) {
     setTheme(next);
     document.documentElement.classList.toggle("dark", next === "dark");
     localStorage.setItem("theme", next);
+  };
+
+  const setTab = (t: TabKey) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", t);
+    setTabState(t);
+    startTransition(() => router.push(`${pathname}?${params.toString()}`));
   };
 
   const setRange = (r: 7 | 30 | 90) => {
