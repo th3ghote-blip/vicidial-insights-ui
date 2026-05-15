@@ -332,7 +332,7 @@ export default function Dashboard(props: Props) {
         <main className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
           {tab !== "insights" && tab !== "alerts" && tab !== "summary" && <KpiStrip lang={lang} leads={props.leads} agents={props.agents} salesTrend={props.salesTrend} forecast={props.forecast} range={props.initialRange} />}
           {tab !== "insights" && tab !== "alerts" && tab !== "summary" && <AiBanner lang={lang} weekly={props.weekly} compact />}
-          {tab === "summary"  && <SummaryTab lang={lang} salesTrend={props.salesTrend} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} />}
+          {tab === "summary"  && <SummaryTab lang={lang} salesTrend={props.salesTrend} callTimes={props.callTimes} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
           {tab === "alerts"   && <AlertsTab lang={lang} alerts={props.alerts} onJump={setTab} />}
           {tab === "leads"    && <LeadsTab lang={lang} leads={props.leads} />}
           {tab === "agents"   && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} />}
