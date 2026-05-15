@@ -80,9 +80,9 @@ export default function KpiStrip({
                 </div>
                 {c.sparkline && <Sparkline data={c.sparkline} />}
               </div>
-              <div className="text-[10px] sm:text-[11px] uppercase tracking-wider text-zinc-500 font-semibold mb-0.5 sm:mb-1 truncate">{c.label}</div>
+              <div className="text-[10px] sm:text-[11px] uppercase tracking-wider text-zinc-600 dark:text-zinc-500 font-semibold mb-0.5 sm:mb-1 truncate">{c.label}</div>
               <div className={`text-xl sm:text-2xl font-semibold tabular-nums truncate ${c.valueColor}`}>{c.value}</div>
-              {c.sub && <div className="text-xs text-zinc-500 mt-1">{c.sub}</div>}
+              {c.sub && <div className="text-xs text-zinc-600 dark:text-zinc-500 mt-1">{c.sub}</div>}
             </div>
           );
         })}
@@ -94,7 +94,7 @@ export default function KpiStrip({
           {forecastUp ? <ArrowUpRight className="h-4 w-4 text-emerald-400" /> : <ArrowDownRight className="h-4 w-4 text-red-400" />}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">
+          <div className="text-[11px] uppercase tracking-wider text-zinc-600 dark:text-zinc-500 font-semibold">
             {lang === "es" ? "Pronóstico próximos 7 días" : "Next 7 days forecast"}
           </div>
           <div className="text-sm text-zinc-700 dark:text-zinc-300 mt-0.5">
@@ -103,7 +103,7 @@ export default function KpiStrip({
             <span className={`ml-2 font-medium tabular-nums ${forecastUp ? "text-emerald-400" : "text-red-400"}`}>
               {forecastUp ? "+" : ""}{forecast.delta_vs_last_week_pct.toFixed(1)}%
             </span>
-            <span className="text-zinc-500 text-xs ml-2">
+            <span className="text-zinc-600 dark:text-zinc-500 text-xs ml-2">
               {lang === "es" ? `vs ${forecast.last_week_sales} la semana pasada` : `vs ${forecast.last_week_sales} last week`}
             </span>
           </div>

@@ -114,7 +114,7 @@ export default function AgentsTab({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={lang === "es" ? "Buscar agente…" : "Search agent…"}
-          className="w-full pl-9 pr-9 py-2 text-sm bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 transition-colors placeholder:text-zinc-400 dark:placeholder:text-zinc-600 text-zinc-900 dark:text-zinc-100"
+          className="w-full pl-9 pr-9 py-2 text-sm bg-white dark:bg-zinc-900/60 border border-zinc-300 dark:border-zinc-800 rounded-lg focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 transition-colors placeholder:text-zinc-500 dark:placeholder:text-zinc-600 text-zinc-900 dark:text-zinc-100"
         />
         {search && (
           <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-500">
@@ -209,7 +209,7 @@ export default function AgentsTab({
                     <span className="font-medium text-zinc-900 dark:text-zinc-100 text-sm sm:text-base">{a.full_name}</span>
                     {m && <MomentumBadge momentum={m} lang={lang} />}
                   </div>
-                  <div className="text-xs text-zinc-500 mt-0.5 flex items-center gap-3">
+                  <div className="text-xs text-zinc-600 dark:text-zinc-500 mt-0.5 flex items-center gap-3">
                     <span>{a.user}</span>
                     {m?.weekly_series && <Sparkline data={m.weekly_series} />}
                   </div>
@@ -217,7 +217,7 @@ export default function AgentsTab({
 
                 <div className="text-right shrink-0">
                   <div className="text-xl sm:text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-300 leading-none">{a.sales}</div>
-                  <div className="text-[10px] uppercase tracking-wider text-zinc-500 mt-0.5">
+                  <div className="text-[10px] uppercase tracking-wider text-zinc-600 dark:text-zinc-500 mt-0.5">
                     {lang === "es" ? "ventas" : "sales"}
                   </div>
                 </div>
@@ -341,7 +341,7 @@ function Metric({ icon: Icon, label, value, color = "zinc" }: {
     <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/60">
       <Icon className="h-3.5 w-3.5 text-zinc-500" strokeWidth={2} />
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] uppercase tracking-wider text-zinc-500 leading-none">{label}</div>
+        <div className="text-[10px] uppercase tracking-wider text-zinc-600 dark:text-zinc-500 leading-none">{label}</div>
         <div className={`text-xs font-mono tabular-nums leading-tight mt-0.5 ${colors[color] ?? colors.zinc}`}>{value}</div>
       </div>
     </div>

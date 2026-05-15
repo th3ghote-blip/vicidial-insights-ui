@@ -71,7 +71,7 @@ export default function AlertsTab({
         <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
           {lang === "es" ? "Alertas" : "Alerts"}
         </h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-0.5">
           {lang === "es"
             ? `${alerts.length} alertas generadas por IA · cacheado 5 min`
             : `${alerts.length} AI-generated alerts · cached 5 min`}
@@ -137,7 +137,7 @@ export default function AlertsTab({
                         {lang === "en" ? meta.labelEn : meta.labelEs}
                       </span>
                       <span className="text-zinc-700">·</span>
-                      <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-zinc-500 font-medium">
+                      <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-zinc-600 dark:text-zinc-500 font-medium">
                         <TypeIcon className="h-3 w-3" strokeWidth={2.2} />
                         {typeMeta[lang]}
                       </span>

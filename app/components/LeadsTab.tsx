@@ -64,7 +64,7 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={lang === "es" ? "Buscar por nombre, ID, teléfono…" : "Search name, ID, phone…"}
-            className="w-full pl-9 pr-9 py-2 text-sm bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 transition-colors placeholder:text-zinc-400 dark:placeholder:text-zinc-600 text-zinc-900 dark:text-zinc-100"
+            className="w-full pl-9 pr-9 py-2 text-sm bg-white dark:bg-zinc-900/60 border border-zinc-300 dark:border-zinc-800 rounded-lg focus:outline-none focus:border-zinc-500 dark:focus:border-zinc-600 focus:bg-white dark:focus:bg-zinc-900 transition-colors placeholder:text-zinc-500 dark:placeholder:text-zinc-600 text-zinc-900 dark:text-zinc-100"
           />
           {search && (
             <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-500">
@@ -100,7 +100,7 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
         <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/30">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-zinc-100 dark:bg-zinc-900/60 text-zinc-500">
+              <thead className="bg-zinc-100 dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-500">
                 <tr>
                   <th className="text-left px-4 py-2.5 font-medium text-xs uppercase tracking-wider">{tr.leadCol.id}</th>
                   <th className="text-left px-4 py-2.5 font-medium text-xs uppercase tracking-wider">{lang === "es" ? "Nombre" : "Name"}</th>
@@ -120,7 +120,7 @@ export default function LeadsTab({ lang, leads }: { lang: Lang; leads: Lead[] })
                       onClick={() => setSelected(l)}
                       className={`cursor-pointer transition-colors ${isSel ? "bg-zinc-100 dark:bg-zinc-800/60" : "hover:bg-zinc-50 dark:hover:bg-zinc-900/60"}`}
                     >
-                      <td className="px-4 py-2.5 font-mono text-zinc-500 text-xs">{l.lead_id}</td>
+                      <td className="px-4 py-2.5 font-mono text-zinc-600 dark:text-zinc-500 text-xs">{l.lead_id}</td>
                       <td className="px-4 py-2.5 text-zinc-800 dark:text-zinc-200">
                         {l.first_name ? `${l.first_name} ${l.last_name}` : "—"}
                       </td>

@@ -90,7 +90,7 @@ export default function Dashboard(props: Props) {
             </div>
             <div>
               <div className="font-semibold leading-tight text-sm">{tr.appName}</div>
-              <div className="text-[11px] text-zinc-500 dark:text-zinc-500 mt-0.5">{tr.subtitle}</div>
+              <div className="text-[11px] text-zinc-600 dark:text-zinc-500 mt-0.5">{tr.subtitle}</div>
             </div>
           </div>
         </div>
@@ -125,7 +125,7 @@ export default function Dashboard(props: Props) {
         </nav>
 
         <div className="px-4 pb-4 pt-3 border-t border-zinc-200 dark:border-zinc-800/60 space-y-2">
-          <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">
+          <div className="text-[10px] uppercase tracking-wider text-zinc-600 dark:text-zinc-500 font-semibold mb-1">
             {lang === "es" ? "Sistema" : "System"}
           </div>
           <HealthRow icon={Server} label={lang === "es" ? "Backend" : "Backend"}
@@ -257,7 +257,7 @@ function HealthRow({ icon: Icon, label, value, ok, warn }: {
 }) {
   const dot = ok ? "bg-emerald-500" : warn ? "bg-amber-500" : "bg-zinc-400 dark:bg-zinc-600";
   return (
-    <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+    <div className="flex items-center gap-2 text-[11px] text-zinc-600 dark:text-zinc-500">
       <Icon className="h-3 w-3" strokeWidth={2} />
       <span className="flex-1">{label}</span>
       <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
