@@ -1,14 +1,14 @@
 import { api } from "@/lib/api";
 import Dashboard from "@/app/components/Dashboard";
 
-// Server component — fetches all dashboard data with the bearer token
-// before rendering. Token never reaches the browser.
 export default async function HomePage() {
-  const [health, leadsRes, agentsRes, disposRes, weekly] = await Promise.all([
+  const [health, leadsRes, agentsRes, disposRes, callTimesRes, salesRes, weekly] = await Promise.all([
     api.health(),
     api.leads(40, 30),
     api.agents(7),
     api.dispositions(7),
+    api.callTimes(7),
+    api.salesTrend(7),
     api.weekly("es"),
   ]);
 
@@ -19,6 +19,8 @@ export default async function HomePage() {
       leads={leadsRes.leads}
       agents={agentsRes.agents}
       dispos={disposRes.dispositions}
+      callTimes={callTimesRes.hours}
+      salesTrend={salesRes.days}
       weekly={weekly}
     />
   );

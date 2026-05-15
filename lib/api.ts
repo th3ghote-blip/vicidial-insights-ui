@@ -57,6 +57,8 @@ export type AgentStat = {
 };
 
 export type Disposition = { dispo: string; count: number };
+export type CallHour = { hour: number; calls: number; sales: number };
+export type SalesDay = { date: string; sales: number };
 export type WeeklyInsight = { lang: "es" | "en"; summary: string; top_leads_count: number };
 export type Campaign = { campaign_id: string; campaign_name: string; active: string };
 
@@ -82,6 +84,10 @@ export const api = {
     fetchJSON<{ agents: AgentStat[] }>(`/agents/leaderboard?days_back=${daysBack}`),
   dispositions: (daysBack = 7) =>
     fetchJSON<{ dispositions: Disposition[] }>(`/insights/dispositions?days_back=${daysBack}`),
+  callTimes: (daysBack = 7) =>
+    fetchJSON<{ hours: CallHour[] }>(`/insights/call-times?days_back=${daysBack}`),
+  salesTrend: (daysBack = 7) =>
+    fetchJSON<{ days: SalesDay[] }>(`/insights/sales-trend?days_back=${daysBack}`),
   weekly: (lang: "es" | "en" = "es") =>
     fetchJSON<WeeklyInsight>(`/insights/weekly?lang=${lang}`),
   campaigns: () => fetchJSON<{ campaigns: Campaign[] }>(`/campaigns`),
