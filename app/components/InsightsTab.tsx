@@ -12,7 +12,7 @@ const DISPO_COLORS = ["#10b981", "#f59e0b", "#94a3b8", "#71717a", "#ef4444", "#6
 const TOOLTIP_STYLE = { backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, color: "#fff" };
 
 export default function InsightsTab({
-  lang, weekly, dispos, callTimes, salesTrend, campaigns, sources, forecast, velocity, matrix,
+  lang, weekly, dispos, callTimes, salesTrend, campaigns, sources, forecast, velocity, matrix, range,
 }: {
   lang: Lang;
   weekly: WeeklyInsight;
@@ -24,6 +24,7 @@ export default function InsightsTab({
   forecast: PipelineForecast;
   velocity: ContactVelocity;
   matrix: AgentCampaignCell[];
+  range?: number;
 }) {
   // Build agent×campaign heatmap data
   const agentNames = Array.from(new Set(matrix.map(c => c.full_name)));
@@ -110,7 +111,7 @@ export default function InsightsTab({
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title={tr.salesTrendHeader}>
+        <ChartCard title={lang === "es" ? `Ventas por día (últimos ${range ?? salesTrend.length})` : `Daily sales (last ${range ?? salesTrend.length})`}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={salesTrend.map(d => ({ ...d, label: fmtDate(d.date, lang) }))} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
