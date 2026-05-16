@@ -44,14 +44,15 @@ export default function SummaryTab({
   const trendDelta = prevSales > 0 ? (((periodSales - prevSales) / prevSales) * 100).toFixed(1) : "0";
 
   // ── Chart data ───────────────────────────────────────────────────────
-  // Today → hourly bars; other ranges → daily bars (last 14 or all)
+  // Today → hourly; 7d → all 7; 30d → last 30; 90d → last 30 (weekly would be better but we have daily)
+  const chartDays = range <= 7 ? salesTrend.length : Math.min(salesTrend.length, 30);
   const hourlyBars: { label: string; value: number; highlight: boolean }[] = isToday
     ? callTimes.map(h => ({
         label: `${h.hour.toString().padStart(2, "0")}h`,
         value: h.sales,
         highlight: h.hour === new Date().getHours(),
       }))
-    : salesTrend.slice(-14).map((d, i, arr) => ({
+    : salesTrend.slice(-chartDays).map((d, i, arr) => ({
         label: new Date(d.date).toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { month: "short", day: "numeric" }),
         value: d.sales,
         highlight: i === arr.length - 1,
@@ -71,7 +72,7 @@ export default function SummaryTab({
 
   const chartTitle = isToday
     ? (lang === "es" ? "Ventas por hora — hoy" : "Sales by hour — today")
-    : (lang === "es" ? `Últimos ${Math.min(salesTrend.length, 14)} días` : `Last ${Math.min(salesTrend.length, 14)} days`);
+    : (lang === "es" ? `Últimos ${chartDays} días` : `Last ${chartDays} days`);
 
   return (
     <section className="space-y-6">
