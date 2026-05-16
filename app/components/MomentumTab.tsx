@@ -223,7 +223,11 @@ function CallsTrendChart({ callTimes, salesTrend, lang }: {
 }
 
 // ── Per-agent activity chart ──────────────────────────────────────────────────
-function AgentWeekChart({ data, lang }: { data: number[]; lang: Lang }) {
+function AgentWeekChart({ data, granularity, lang }: {
+  data: number[];
+  granularity: "daily" | "weekly";
+  lang: Lang;
+}) {
   if (!data || data.length < 2) return null;
 
   const maxV = Math.max(...data, 0.001);
@@ -232,12 +236,19 @@ function AgentWeekChart({ data, lang }: { data: number[]; lang: Lang }) {
   const LABEL_H = 16;
   const H = BAR_H + LABEL_H;
 
-  // Week labels: oldest first — "S-3", "S-2", "S-1", "Esta sem."
+  // Build labels: daily → actual weekday names; weekly → "W-N" / "S-N"
+  const today = new Date();
   const weekLabels = data.map((_, i) => {
-    const weeksAgo = data.length - 1 - i;
-    if (weeksAgo === 0) return lang === "es" ? "Hoy" : "Now";
-    if (weeksAgo === 1) return lang === "es" ? "S-1" : "W-1";
-    return lang === "es" ? `S-${weeksAgo}` : `W-${weeksAgo}`;
+    const stepsBack = data.length - 1 - i;
+    if (granularity === "daily") {
+      const d = new Date(today);
+      d.setDate(today.getDate() - stepsBack);
+      if (stepsBack === 0) return lang === "es" ? "Hoy" : "Today";
+      return d.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { weekday: "short" });
+    } else {
+      if (stepsBack === 0) return lang === "es" ? "Esta" : "Now";
+      return lang === "es" ? `S-${stepsBack}` : `W-${stepsBack}`;
+    }
   });
 
   return (
@@ -310,9 +321,13 @@ function AgentFlagCard({ agent, momentum, flags, lang }: {
         )}
       </div>
 
-      {/* Weekly activity chart */}
+      {/* Activity chart — granularity matches selected timeframe */}
       {momentum?.weekly_series && momentum.weekly_series.length >= 2 && (
-        <AgentWeekChart data={momentum.weekly_series} lang={lang} />
+        <AgentWeekChart
+          data={momentum.weekly_series}
+          granularity={momentum.series_granularity ?? "weekly"}
+          lang={lang}
+        />
       )}
 
       {/* Flag chips */}

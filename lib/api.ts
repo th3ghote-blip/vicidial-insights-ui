@@ -96,6 +96,7 @@ export type AgentMomentum = {
   change_pct: number;
   status: "rising_star" | "needs_attention" | "cooling" | "on_streak" | "stable";
   weekly_series: number[];
+  series_granularity: "daily" | "weekly";
 };
 
 export type SourceROI = {
@@ -186,8 +187,8 @@ export const api = {
   campaigns: () => fetchJSON<{ campaigns: Campaign[] }>(`/campaigns`),
   campaignPerformance: (daysBack = 30) =>
     fetchJSON<{ campaigns: CampaignStat[] }>(`/campaigns/performance?days_back=${daysBack}`),
-  agentMomentum: (weeksBack = 4) =>
-    fetchJSON<{ agents: AgentMomentum[] }>(`/agents/momentum?weeks_back=${weeksBack}`),
+  agentMomentum: (daysBack = 28) =>
+    fetchJSON<{ agents: AgentMomentum[] }>(`/agents/momentum?days_back=${daysBack}`),
   leadSources: (daysBack = 30) =>
     fetchJSON<{ sources: SourceROI[] }>(`/insights/sources?days_back=${daysBack}`),
   forecast: () => fetchJSON<PipelineForecast>(`/insights/forecast`),

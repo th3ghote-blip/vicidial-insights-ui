@@ -37,7 +37,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
     api.salesTrend(range),
     api.weekly("es"),
     api.campaignPerformance(range),
-    api.agentMomentum(4),
+    api.agentMomentum(rangeLabel === "today" ? 7 : range),
     api.leadSources(range),
     api.forecast(),
     api.contactVelocity(7),
