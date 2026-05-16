@@ -222,28 +222,100 @@ function CallsTrendChart({ callTimes, salesTrend, lang }: {
   );
 }
 
-// ── Agent card ────────────────────────────────────────────────────────────────
-function Sparkline({ data }: { data: number[] }) {
-  if (data.length < 2) return null;
-  const max = Math.max(...data); const min = Math.min(...data);
-  const r = max - min || 1; const w = 52, h = 16;
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / r) * h}`).join(" ");
+// ── Per-agent activity chart ──────────────────────────────────────────────────
+function AgentWeekChart({ data, lang }: { data: number[]; lang: Lang }) {
+  if (!data || data.length < 2) return null;
+
+  const maxV = Math.max(...data, 0.001);
   const up = data[data.length - 1] >= data[0];
-  return <svg width={w} height={h} className="shrink-0"><polyline points={pts} fill="none" stroke={up ? "#34d399" : "#f87171"} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" /></svg>;
+  const BAR_H = 64; // px height of bar area
+  const LABEL_H = 16;
+  const H = BAR_H + LABEL_H;
+
+  // Week labels: oldest first — "S-3", "S-2", "S-1", "Esta sem."
+  const weekLabels = data.map((_, i) => {
+    const weeksAgo = data.length - 1 - i;
+    if (weeksAgo === 0) return lang === "es" ? "Hoy" : "Now";
+    if (weeksAgo === 1) return lang === "es" ? "S-1" : "W-1";
+    return lang === "es" ? `S-${weeksAgo}` : `W-${weeksAgo}`;
+  });
+
+  return (
+    <div className="w-full rounded-lg bg-zinc-50 dark:bg-zinc-950/40 border border-zinc-100 dark:border-zinc-800/60 px-2 pt-2 pb-0 overflow-hidden" style={{ height: H + 8 }}>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: "3px", height: BAR_H }}>
+        {data.map((v, i) => {
+          const isLast = i === data.length - 1;
+          const barH = maxV > 0 ? Math.max((v / maxV) * (BAR_H - 14), 2) : 2;
+          const barColor = isLast
+            ? (up ? "#10b981" : "#f87171")
+            : (up ? "rgb(52,211,153)" : "rgb(252,165,165)");
+          const opacity = isLast ? 1 : 0.45 + (i / (data.length - 1)) * 0.35;
+          return (
+            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%" }}>
+              {v > 0 && (
+                <div style={{ fontSize: "8px", color: isLast ? barColor : "#a1a1aa", marginBottom: "2px", fontWeight: isLast ? 700 : 400 }}>
+                  {(v * 100).toFixed(0)}%
+                </div>
+              )}
+              <div
+                style={{
+                  width: "100%",
+                  height: `${barH}px`,
+                  backgroundColor: barColor,
+                  opacity,
+                  borderRadius: "3px 3px 0 0",
+                  boxShadow: isLast ? `0 0 6px ${barColor}66` : "none",
+                  transition: "height 0.3s ease",
+                }}
+                title={`${weekLabels[i]}: ${(v * 100).toFixed(1)}%`}
+              />
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: "flex", gap: "3px", height: LABEL_H, alignItems: "center" }}>
+        {weekLabels.map((l, i) => {
+          const isLast = i === data.length - 1;
+          return (
+            <div key={i} style={{ flex: 1, textAlign: "center", fontSize: "8px", color: isLast ? (up ? "#10b981" : "#f87171") : "#a1a1aa", fontWeight: isLast ? 700 : 400 }}>
+              {l}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
+// ── Agent card ────────────────────────────────────────────────────────────────
 function AgentFlagCard({ agent, momentum, flags, lang }: {
   agent: AgentStat; momentum: AgentMomentum | undefined; flags: Flag[]; lang: Lang;
 }) {
   return (
-    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-3.5">
-      <div className="flex items-center justify-between gap-2 mb-2.5">
+    <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-3.5 space-y-2.5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="font-medium text-sm text-zinc-900 dark:text-zinc-100 truncate">{agent.full_name}</div>
-          <div className="text-xs text-zinc-500 tabular-nums mt-0.5">{agent.sales} {lang === "es" ? "ventas" : "sales"} · {(agent.close_rate * 100).toFixed(1)}%</div>
+          <div className="text-xs text-zinc-500 tabular-nums mt-0.5">{agent.sales} {lang === "es" ? "ventas" : "sales"} · {(agent.close_rate * 100).toFixed(1)}% {lang === "es" ? "cierre" : "close"}</div>
         </div>
-        {momentum?.weekly_series && <Sparkline data={momentum.weekly_series} />}
+        {momentum && (
+          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md border shrink-0 ${
+            momentum.change_pct >= 0
+              ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 border-emerald-500/30"
+              : "text-red-700 dark:text-red-300 bg-red-500/10 border-red-500/30"
+          }`}>
+            {momentum.change_pct >= 0 ? "+" : ""}{momentum.change_pct.toFixed(1)}%
+          </span>
+        )}
       </div>
+
+      {/* Weekly activity chart */}
+      {momentum?.weekly_series && momentum.weekly_series.length >= 2 && (
+        <AgentWeekChart data={momentum.weekly_series} lang={lang} />
+      )}
+
+      {/* Flag chips */}
       <div className="space-y-1.5">
         {flags.map((f, i) => {
           const Icon = f.icon;
@@ -255,7 +327,9 @@ function AgentFlagCard({ agent, momentum, flags, lang }: {
           );
         })}
       </div>
-      <div className="flex gap-3 mt-2.5 pt-2.5 border-t border-zinc-100 dark:border-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-500 flex-wrap">
+
+      {/* Metrics strip */}
+      <div className="flex gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-500 flex-wrap">
         <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{agent.calls_handled}</span>
         <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{Math.round(agent.avg_talk_sec)}s</span>
         <span className="flex items-center gap-1"><Gauge className="h-3 w-3" />{((agent.utilization_rate ?? 0) * 100).toFixed(0)}%</span>
