@@ -16,6 +16,7 @@ import AiBanner from "./AiBanner";
 import SummaryTab from "./SummaryTab";
 import LeadsTab from "./LeadsTab";
 import AgentsTab from "./AgentsTab";
+import MomentumTab from "./MomentumTab";
 import InsightsTab from "./InsightsTab";
 import AlertsTab from "./AlertsTab";
 
@@ -41,7 +42,7 @@ type Props = {
   matrix: AgentCampaignCell[];
 };
 
-type TabKey = "summary" | "alerts" | "leads" | "agents" | "insights";
+type TabKey = "summary" | "alerts" | "leads" | "agents" | "momentum" | "insights";
 type Theme = "light" | "dark";
 
 const NAV = [
@@ -49,6 +50,7 @@ const NAV = [
   { key: "alerts"   as const, icon: Bell,       labelEs: "Alertas",  labelEn: "Alerts"   },
   { key: "leads"    as const, icon: Target,     labelEs: "Leads",    labelEn: "Leads"    },
   { key: "agents"   as const, icon: Users,      labelEs: "Agentes",  labelEn: "Agents"   },
+  { key: "momentum" as const, icon: Sparkles,   labelEs: "Momentum", labelEn: "Momentum" },
   { key: "insights" as const, icon: BarChart3,  labelEs: "Análisis", labelEn: "Insights" },
 ];
 
@@ -61,7 +63,7 @@ export default function Dashboard(props: Props) {
   const [lang, setLang] = useState<Lang>(props.initialLang);
   const [tab, setTabState] = useState<TabKey>(() => {
     const tabParam = searchParams.get("tab") as TabKey | null;
-    return tabParam && ["summary", "alerts", "leads", "agents", "insights"].includes(tabParam) ? tabParam : "summary";
+    return tabParam && ["summary", "alerts", "leads", "agents", "momentum", "insights"].includes(tabParam) ? tabParam : "summary";
   });
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "dark";
@@ -184,6 +186,7 @@ export default function Dashboard(props: Props) {
               {tab === "alerts"   && <><Bell className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Alertas" : "Alerts"}</>}
               {tab === "leads"    && <><Target className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Leads" : "Leads"}</>}
               {tab === "agents"   && <><Users className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Agentes" : "Agents"}</>}
+              {tab === "momentum" && <><Sparkles className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Momentum" : "Momentum"}</>}
               {tab === "insights" && <><BarChart3 className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Análisis" : "Insights"}</>}
             </h1>
 
@@ -287,6 +290,7 @@ export default function Dashboard(props: Props) {
           {tab === "alerts"   && <AlertsTab lang={lang} alerts={props.alerts} onJump={setTab} />}
           {tab === "leads"    && <LeadsTab lang={lang} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
           {tab === "agents"   && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} range={props.initialRange} />}
+          {tab === "momentum" && <MomentumTab lang={lang} agents={props.agents} momentum={props.momentum} />}
           {tab === "insights" && (
             <InsightsTab
               lang={lang}
