@@ -58,7 +58,7 @@ export default function InsightsTab({
         <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
           {lang === "es" ? "ROI por fuente de leads" : "Lead source ROI"}
         </h3>
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-transparent">
+        <div className="overflow-x-auto no-scrollbar rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-transparent">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-200 dark:border-zinc-800 text-xs uppercase text-zinc-500">
@@ -129,7 +129,7 @@ export default function InsightsTab({
         <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
           {lang === "es" ? "Matriz de rendimiento — agente × campaña" : "Performance matrix — agent × campaign"}
         </h3>
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/30">
+        <div className="overflow-x-auto no-scrollbar rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/30">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-zinc-200 dark:border-zinc-800">
@@ -178,7 +178,7 @@ export default function InsightsTab({
         <h3 className="text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
           {lang === "es" ? "Rendimiento por campaña" : "Campaign performance"}
         </h3>
-        <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-transparent">
+        <div className="overflow-x-auto no-scrollbar rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-transparent">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-200 dark:border-zinc-800 text-xs uppercase text-zinc-500">

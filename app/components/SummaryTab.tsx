@@ -222,15 +222,18 @@ export default function SummaryTab({
                 {lang === "es" ? "Sin datos" : "No data"}
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <div style={{ minWidth: isToday ? "560px" : "auto", height: "180px", display: "flex", alignItems: "flex-end", gap: "3px", paddingBottom: "24px", position: "relative" }}>
+              <div className="overflow-x-auto no-scrollbar">
+                <div style={{ minWidth: isToday ? "520px" : "auto", height: "180px", display: "flex", alignItems: "flex-end", gap: "2px", paddingBottom: "24px", position: "relative" }}>
                   {hourlyBars.map((b, i) => {
                     const barH = maxBar > 0 ? (b.value / maxBar) * 148 : 0;
+                    // Show labels every Nth bar to avoid crowding; always show first, last, highlight
+                    const labelStep = hourlyBars.length > 20 ? 7 : hourlyBars.length > 10 ? 4 : 1;
+                    const showLabel = b.highlight || i === 0 || i % labelStep === 0;
                     return (
-                      <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, minWidth: isToday ? "20px" : "auto" }}>
+                      <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, minWidth: isToday ? "18px" : "auto" }}>
                         {b.value > 0 && (
                           <div style={{ fontSize: "8px", color: b.highlight ? "#10b981" : "#9ca3af", marginBottom: "2px", fontWeight: 600 }}>
-                            {b.value}
+                            {b.highlight ? b.value : ""}
                           </div>
                         )}
                         <div
@@ -244,7 +247,7 @@ export default function SummaryTab({
                           }}
                           title={`${b.label}: ${b.value}`}
                         />
-                        <div style={{ fontSize: "8px", marginTop: "5px", color: b.highlight ? "#10b981" : "#9ca3af", fontWeight: b.highlight ? 700 : 400, whiteSpace: "nowrap" }}>
+                        <div style={{ fontSize: "8px", marginTop: "5px", color: b.highlight ? "#10b981" : "#9ca3af", fontWeight: b.highlight ? 700 : 400, whiteSpace: "nowrap", visibility: showLabel ? "visible" : "hidden" }}>
                           {b.label}
                         </div>
                       </div>
@@ -262,7 +265,7 @@ export default function SummaryTab({
                 {lang === "es" ? "Campañas" : "Campaigns"}
               </h3>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto no-scrollbar">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-zinc-500 dark:text-zinc-600 text-[11px] uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-800/60">

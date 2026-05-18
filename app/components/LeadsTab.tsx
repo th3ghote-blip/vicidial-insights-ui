@@ -120,7 +120,7 @@ export default function LeadsTab({ lang, leads, range, rangeLabel }: { lang: Lan
       <div className="grid lg:grid-cols-[1fr_22rem] gap-4">
         {/* Table */}
         <div className="overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/30">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-sm">
               <thead className="bg-zinc-100 dark:bg-zinc-900/60 text-zinc-700 dark:text-zinc-500">
                 <tr>

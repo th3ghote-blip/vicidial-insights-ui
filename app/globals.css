@@ -37,3 +37,12 @@ html, body {
 html, body, * {
   transition: background-color 200ms ease, border-color 200ms ease, color 100ms ease;
 }
+
+/* Hide scrollbars visually while keeping scroll functionality */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

@@ -303,7 +303,7 @@ function CallsTrendChart({ callTimes, salesTrend, lang }: {
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />{lang === "es" ? "caída >20%" : "drop >20%"}</span>
         </div>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto no-scrollbar">
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none" style={{ minWidth: isHourly ? 480 : 320 }}>
           {[0, 0.25, 0.5, 0.75, 1].map(f => {
             const y = PAD.t + f * (H - PAD.t - PAD.b);
