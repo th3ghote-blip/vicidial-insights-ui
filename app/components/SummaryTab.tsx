@@ -10,7 +10,7 @@ type RangeLabel = "today" | 7 | 30 | 90 | "custom" | number;
 const STATUS_BADGE: Record<string, { es: string; en: string; color: string }> = {
   rising_star:     { es: "En racha 🔥",       en: "On fire 🔥",        color: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" },
   on_streak:       { es: "Subiendo",           en: "Rising",            color: "bg-sky-500/15 text-sky-700 dark:text-sky-300" },
-  stable:          { es: "Estable",            en: "Stable",            color: "bg-zinc-200/60 text-zinc-600 dark:text-zinc-400" },
+  stable:          { es: "Estable",            en: "Stable",            color: "bg-zinc-200/60 text-zinc-600 dark:bg-zinc-700/60 dark:text-zinc-200" },
   cooling:         { es: "Vigilar",            en: "Watch",             color: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
   needs_attention: { es: "Atención",           en: "Attention",         color: "bg-red-500/15 text-red-700 dark:text-red-300" },
 };
@@ -279,7 +279,7 @@ export default function SummaryTab({
             </div>
             {weekly?.summary ? (
               <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
-                {weekly.summary}
+                <InlineMarkdown text={weekly.summary} />
               </p>
             ) : (
               <p className="text-xs text-zinc-500 italic">
@@ -330,6 +330,29 @@ export default function SummaryTab({
         </div>
       )}
     </section>
+  );
+}
+
+/** Renders **bold** markers from the AI summary without needing a markdown lib. */
+function InlineMarkdown({ text }: { text: string }) {
+  // Split on paragraph breaks first, then handle **bold** within each block
+  const blocks = text.split(/\n{2,}/);
+  return (
+    <>
+      {blocks.map((block, bi) => {
+        const parts = block.split(/\*\*(.*?)\*\*/g);
+        return (
+          <span key={bi}>
+            {bi > 0 && <><br /><br /></>}
+            {parts.map((part, pi) =>
+              pi % 2 === 1
+                ? <strong key={pi} className="font-semibold text-zinc-900 dark:text-zinc-100">{part}</strong>
+                : part
+            )}
+          </span>
+        );
+      })}
+    </>
   );
 }
 
