@@ -336,11 +336,11 @@ export default function SummaryTab({
 /** Renders **bold** markers from the AI summary without needing a markdown lib. */
 function InlineMarkdown({ text }: { text: string }) {
   // Split on paragraph breaks first, then handle **bold** within each block
-  const blocks = text.split(/\n{2,}/);
+  const blocks = text.split(/\n{2,}/).filter(b => b.trim());
   return (
     <>
       {blocks.map((block, bi) => {
-        const parts = block.split(/\*\*(.*?)\*\*/g);
+        const parts = block.trim().split(/\*\*(.*?)\*\*/g);
         return (
           <span key={bi}>
             {bi > 0 && <><br /><br /></>}
