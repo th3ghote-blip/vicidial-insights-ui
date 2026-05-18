@@ -4,8 +4,10 @@ import { useState, useEffect, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Users, BarChart3, Sparkles, Target, LineChart,
-  Database, Cpu, Server, Sun, Moon, Loader2, MessageSquare,
+  Database, Cpu, Server, Sun, Moon, Loader2, MessageSquare, Settings2,
 } from "lucide-react";
+import { loadTargets, type Targets } from "@/lib/targets";
+import TargetsPanel from "./TargetsPanel";
 import type {
   Lead, AgentStat, Disposition, CallHour, SalesDay, WeeklyInsight, Health, CampaignStat,
   AgentMomentum, SourceROI, PipelineForecast, ContactVelocity, Alert, AgentCampaignCell,
@@ -73,6 +75,8 @@ export default function Dashboard(props: Props) {
   const [showCustomDate, setShowCustomDate] = useState(false);
   const [customStart, setCustomStart] = useState(props.initialStartDate || "");
   const [customEnd, setCustomEnd] = useState(props.initialEndDate || "");
+  const [showTargets, setShowTargets] = useState(false);
+  const [targets, setTargets] = useState<Targets>(() => loadTargets());
   const tr = t[lang];
   const urgentCount = props.alerts.filter(a => a.severity === "high").length;
   void urgentCount; // available for future badge use
@@ -263,6 +267,22 @@ export default function Dashboard(props: Props) {
             >
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
+
+            {/* KPI targets */}
+            <button
+              onClick={() => setShowTargets(true)}
+              title={lang === "es" ? "Objetivos KPI" : "KPI Targets"}
+              className={`relative h-8 w-8 rounded-lg border flex items-center justify-center transition-colors ${
+                Object.values(targets).some(v => v !== null)
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+              }`}
+            >
+              <Settings2 className="h-4 w-4" strokeWidth={2} />
+              {Object.values(targets).some(v => v !== null) && (
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-950" />
+              )}
+            </button>
           </div>
 
           <nav className="md:hidden px-4 flex gap-1 border-t border-zinc-200 dark:border-zinc-900 overflow-x-auto">
@@ -286,9 +306,10 @@ export default function Dashboard(props: Props) {
         </header>
 
         <main className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-          {tab === "summary"   && <SummaryTab lang={lang} salesTrend={props.salesTrend} callTimes={props.callTimes} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} weekly={props.weekly} momentum={props.momentum} />}
+          <KpiStrip lang={lang} leads={props.leads} agents={props.agents} salesTrend={props.salesTrend} forecast={props.forecast} range={props.initialRange} targets={targets} />
+          {tab === "summary"   && <SummaryTab lang={lang} salesTrend={props.salesTrend} callTimes={props.callTimes} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} weekly={props.weekly} momentum={props.momentum} targets={targets} />}
           {tab === "leads"     && <LeadsTab lang={lang} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
-          {tab === "agents"    && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} range={props.initialRange} />}
+          {tab === "agents"    && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} range={props.initialRange} targets={targets} />}
           {tab === "momentum"  && <MomentumTab lang={lang} agents={props.agents} momentum={props.momentum} momentum90={props.momentum90} callTimes={props.callTimes} salesTrend={props.salesTrend} />}
           {tab === "chat"      && <ChatTab lang={lang} />}
           {tab === "analytics" && (
@@ -308,6 +329,15 @@ export default function Dashboard(props: Props) {
           )}
         </main>
       </div>
+
+      {/* KPI targets slide-in panel */}
+      <TargetsPanel
+        open={showTargets}
+        onClose={() => setShowTargets(false)}
+        targets={targets}
+        onChange={setTargets}
+        lang={lang}
+      />
 
       {/* Custom date range modal — rendered at root to escape sticky header stacking context */}
       {showCustomDate && (

@@ -1,18 +1,25 @@
 "use client";
 
-import { Flame, TrendingUp, Phone, Award, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Flame, TrendingUp, Phone, Award, ArrowUpRight, ArrowDownRight, ChevronUp, ChevronDown, Minus } from "lucide-react";
 import type { Lead, AgentStat, SalesDay, PipelineForecast } from "@/lib/api";
 import { t, type Lang } from "@/lib/i18n";
+import { type Targets, vsTarget } from "@/lib/targets";
 
 export default function KpiStrip({
-  lang, leads, agents, salesTrend, forecast, range,
-}: { lang: Lang; leads: Lead[]; agents: AgentStat[]; salesTrend: SalesDay[]; forecast: PipelineForecast; range: number }) {
+  lang, leads, agents, salesTrend, forecast, range, targets,
+}: { lang: Lang; leads: Lead[]; agents: AgentStat[]; salesTrend: SalesDay[]; forecast: PipelineForecast; range: number; targets?: Targets }) {
   const tr = t[lang].kpi;
   const hot = leads.filter(l => l.score >= 60).length;
   const totalSales = salesTrend.reduce((s, d) => s + d.sales, 0);
   const totalCalls = agents.reduce((s, a) => s + a.calls_handled, 0);
-  const conv = totalCalls > 0 ? ((totalSales / totalCalls) * 100).toFixed(1) : "0";
+  const convRate = totalCalls > 0 ? totalSales / totalCalls : 0;
+  const conv = (convRate * 100).toFixed(1);
   const top = agents[0];
+
+  // vs-target helpers
+  const convStatus  = vsTarget(convRate,   targets?.close_rate ?? null);
+  void vsTarget(totalSales, targets?.sales ?? null); // available for future sales card
+  const callsStatus = vsTarget(totalCalls, targets?.calls ?? null);
 
   // Mini sparkline data — last 14 days
   const sparkData = salesTrend.slice(-14).map(d => d.sales);
@@ -32,6 +39,7 @@ export default function KpiStrip({
       iconBg: "bg-emerald-500/10",
       iconColor: "text-emerald-400",
       valueColor: "text-emerald-600 dark:text-emerald-300",
+      status: null,
     },
     {
       label: tr.conversion,
@@ -42,6 +50,8 @@ export default function KpiStrip({
       iconColor: "text-sky-400",
       valueColor: "text-sky-600 dark:text-sky-300",
       sparkline: sparkData,
+      status: convStatus,
+      targetLabel: targets?.close_rate ? `${lang === "es" ? "obj" : "tgt"} ${(targets.close_rate * 100).toFixed(0)}%` : null,
     },
     {
       label: tr.callsToday,
@@ -51,6 +61,8 @@ export default function KpiStrip({
       iconBg: "bg-zinc-700/40",
       iconColor: "text-zinc-300",
       valueColor: "text-zinc-900 dark:text-zinc-100",
+      status: callsStatus,
+      targetLabel: targets?.calls ? `${lang === "es" ? "obj" : "tgt"} ${targets.calls.toLocaleString()}` : null,
     },
     {
       label: tr.topCloser,
@@ -60,6 +72,7 @@ export default function KpiStrip({
       iconBg: "bg-amber-500/10",
       iconColor: "text-amber-400",
       valueColor: "text-amber-600 dark:text-amber-300",
+      status: null,
     },
   ];
 
@@ -80,7 +93,12 @@ export default function KpiStrip({
                 <div className={`h-7 w-7 sm:h-8 sm:w-8 rounded-lg ${c.iconBg} flex items-center justify-center`}>
                   <Icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${c.iconColor}`} strokeWidth={2} />
                 </div>
-                {c.sparkline && <Sparkline data={c.sparkline} />}
+                <div className="flex items-center gap-1.5">
+                  {"status" in c && c.status && (
+                    <VsTargetChip status={c.status} label={"targetLabel" in c ? c.targetLabel ?? "" : ""} lang={lang} />
+                  )}
+                  {c.sparkline && <Sparkline data={c.sparkline} />}
+                </div>
               </div>
               <div className="text-[10px] sm:text-[11px] uppercase tracking-wider text-zinc-600 dark:text-zinc-500 font-semibold mb-0.5 sm:mb-1 truncate">{c.label}</div>
               <div className={`text-xl sm:text-2xl font-semibold tabular-nums truncate ${c.valueColor}`}>{c.value}</div>
@@ -112,6 +130,31 @@ export default function KpiStrip({
         </div>
       </div>
     </div>
+  );
+}
+
+function VsTargetChip({ status, label, lang }: {
+  status: "above" | "below" | "on";
+  label: string;
+  lang: Lang;
+}) {
+  if (status === "above") return (
+    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
+      <ChevronUp className="h-2.5 w-2.5" strokeWidth={3} />
+      {label || (lang === "es" ? "sobre obj." : "above tgt")}
+    </span>
+  );
+  if (status === "below") return (
+    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/25">
+      <ChevronDown className="h-2.5 w-2.5" strokeWidth={3} />
+      {label || (lang === "es" ? "bajo obj." : "below tgt")}
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-zinc-200/80 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700">
+      <Minus className="h-2.5 w-2.5" strokeWidth={3} />
+      {lang === "es" ? "en obj." : "on tgt"}
+    </span>
   );
 }
 

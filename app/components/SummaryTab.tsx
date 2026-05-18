@@ -3,6 +3,7 @@
 import { TrendingUp, TrendingDown, Sparkles } from "lucide-react";
 import type { SalesDay, CallHour, CampaignStat, AgentStat, Lead, WeeklyInsight, AgentMomentum } from "@/lib/api";
 import { type Lang } from "@/lib/i18n";
+import { type Targets, vsTarget } from "@/lib/targets";
 
 type RangeLabel = "today" | 7 | 30 | 90 | "custom" | number;
 
@@ -16,7 +17,7 @@ const STATUS_BADGE: Record<string, { es: string; en: string; color: string }> = 
 
 export default function SummaryTab({
   lang, salesTrend, callTimes, campaigns, agents, leads: _leads,
-  range, rangeLabel, weekly, momentum,
+  range, rangeLabel, weekly, momentum, targets,
 }: {
   lang: Lang;
   salesTrend: SalesDay[];
@@ -28,6 +29,7 @@ export default function SummaryTab({
   rangeLabel: RangeLabel;
   weekly?: WeeklyInsight;
   momentum?: AgentMomentum[];
+  targets?: Targets;
 }) {
   const isToday = rangeLabel === "today";
 
@@ -233,20 +235,34 @@ export default function SummaryTab({
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/40">
-                {topAgents.map((a, rank) => (
-                  <tr key={a.user} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/60 transition-colors">
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-[11px] font-mono text-zinc-400 w-4 shrink-0">{rank + 1}</span>
-                        <span className="font-medium text-zinc-900 dark:text-zinc-100 truncate">
-                          {a.full_name.split(" ").map((n, i) => i === 0 ? n : n[0] + ".").join(" ")}
+                {topAgents.map((a, rank) => {
+                  const closeStatus = vsTarget(a.close_rate, targets?.close_rate ?? null);
+                  const salesStatus = vsTarget(a.sales,      targets?.sales      ?? null);
+                  return (
+                    <tr key={a.user} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/60 transition-colors">
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-[11px] font-mono text-zinc-400 w-4 shrink-0">{rank + 1}</span>
+                          <span className="font-medium text-zinc-900 dark:text-zinc-100 truncate">
+                            {a.full_name.split(" ").map((n, i) => i === 0 ? n : n[0] + ".").join(" ")}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums font-semibold">
+                        <span className={salesStatus === "above" ? "text-emerald-700 dark:text-emerald-300" : salesStatus === "below" ? "text-red-700 dark:text-red-400" : "text-emerald-700 dark:text-emerald-300"}>
+                          {a.sales}
                         </span>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2.5 text-right tabular-nums text-emerald-700 dark:text-emerald-300 font-semibold">{a.sales}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-sky-700 dark:text-sky-300 font-medium">{(a.close_rate * 100).toFixed(1)}%</td>
-                  </tr>
-                ))}
+                        {salesStatus && <SummaryTargetBadge status={salesStatus} />}
+                      </td>
+                      <td className="px-4 py-2.5 text-right tabular-nums font-medium">
+                        <span className={closeStatus === "above" ? "text-emerald-700 dark:text-emerald-300" : closeStatus === "below" ? "text-red-700 dark:text-red-400" : "text-sky-700 dark:text-sky-300"}>
+                          {(a.close_rate * 100).toFixed(1)}%
+                        </span>
+                        {closeStatus && <SummaryTargetBadge status={closeStatus} />}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -315,6 +331,12 @@ export default function SummaryTab({
       )}
     </section>
   );
+}
+
+function SummaryTargetBadge({ status }: { status: "above" | "below" | "on" }) {
+  if (status === "above") return <span className="ml-1 text-[8px] font-bold text-emerald-600 dark:text-emerald-400">▲</span>;
+  if (status === "below") return <span className="ml-1 text-[8px] font-bold text-red-600 dark:text-red-400">▼</span>;
+  return <span className="ml-1 text-[8px] font-bold text-amber-600 dark:text-amber-400">=</span>;
 }
 
 function KpiCard({ label, value, sub, trend, trendUp, highlight }: {

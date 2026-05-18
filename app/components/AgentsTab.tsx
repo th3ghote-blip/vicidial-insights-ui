@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { AgentStat, AgentMomentum } from "@/lib/api";
 import { t, type Lang } from "@/lib/i18n";
+import { type Targets, vsTarget } from "@/lib/targets";
 
 type SortKey = "rank" | "close_rate" | "sales" | "calls" | "utilization" | "callbacks" | "wait" | "talk";
 type StatusFilter = "all" | AgentMomentum["status"];
@@ -22,8 +23,8 @@ const MOMENTUM_META: Record<AgentMomentum["status"], {
 };
 
 export default function AgentsTab({
-  lang, agents, momentum, range,
-}: { lang: Lang; agents: AgentStat[]; momentum: AgentMomentum[]; range: number }) {
+  lang, agents, momentum, range, targets,
+}: { lang: Lang; agents: AgentStat[]; momentum: AgentMomentum[]; range: number; targets?: Targets }) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("rank");
   const [sortDir, setSortDir] = useState<"asc"|"desc">("desc");
@@ -189,6 +190,21 @@ export default function AgentsTab({
           const rank = sortKey === "rank" ? i : agents.findIndex(x => x.user === a.user);
           const isLeader = rank === 0;
 
+          // vs-target signals
+          const closeStatus  = vsTarget(a.close_rate,          targets?.close_rate     ?? null);
+          const salesStatus2 = vsTarget(a.sales,               targets?.sales          ?? null);
+          const utilStatus   = vsTarget(a.utilization_rate ?? 0, targets?.utilization  ?? null);
+          const dialStatus   = vsTarget(a.dials_per_hour ?? 0, targets?.dials_per_hour ?? null);
+          const talkStatus   = vsTarget(a.avg_talk_sec,        targets?.avg_talk_sec   ?? null);
+          const cbStatus     = vsTarget(
+            a.callbacks_set ? (a.callbacks_converted ?? 0) / a.callbacks_set : 0,
+            targets?.callback_conv ?? null,
+          );
+          // Target tick position on bar (0–100%)
+          const targetTickPct = targets?.close_rate
+            ? Math.min((targets.close_rate / maxRate) * 100, 100)
+            : null;
+
           return (
             <div
               key={a.user}
@@ -217,15 +233,18 @@ export default function AgentsTab({
 
                 <div className="text-right shrink-0">
                   <div className="text-xl sm:text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-300 leading-none">{a.sales}</div>
-                  <div className="text-[10px] uppercase tracking-wider text-zinc-600 dark:text-zinc-500 mt-0.5">
-                    {lang === "es" ? "ventas" : "sales"}
+                  <div className="flex items-center justify-end gap-1 mt-0.5">
+                    <div className="text-[10px] uppercase tracking-wider text-zinc-600 dark:text-zinc-500">
+                      {lang === "es" ? "ventas" : "sales"}
+                    </div>
+                    {salesStatus2 && <VsTargetBadge status={salesStatus2} />}
                   </div>
                 </div>
               </div>
 
               {/* Close rate bar */}
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-800/80 rounded-full overflow-hidden">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="relative flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-800/80 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
                       isLeader
@@ -234,10 +253,17 @@ export default function AgentsTab({
                     }`}
                     style={{ width: `${widthPct}%` }}
                   />
+                  {targetTickPct !== null && (
+                    <div
+                      className="absolute top-0 bottom-0 w-px bg-amber-400 opacity-90"
+                      style={{ left: `${targetTickPct}%` }}
+                    />
+                  )}
                 </div>
                 <span className="text-sm font-mono tabular-nums text-zinc-800 dark:text-zinc-200 w-14 text-right">
                   {ratePct.toFixed(1)}%
                 </span>
+                {closeStatus && <VsTargetBadge status={closeStatus} />}
               </div>
 
               {/* Metric chips */}
@@ -245,11 +271,12 @@ export default function AgentsTab({
                 <Metric icon={Phone} label={lang === "es" ? "Llamadas" : "Calls"} value={a.calls_handled.toLocaleString()} />
                 <Metric icon={TrendingUp} label={lang === "es" ? "Utiliz." : "Utiliz."}
                   value={`${((a.utilization_rate ?? 0) * 100).toFixed(0)}%`}
+                  status={utilStatus}
                   color={(a.utilization_rate ?? 0) >= 0.7 ? "emerald" : (a.utilization_rate ?? 0) >= 0.5 ? "amber" : "red"} />
-                <Metric icon={Phone} label={lang === "es" ? "Marc/h" : "Dials/h"} value={`${a.dials_per_hour ?? 0}`} />
+                <Metric icon={Phone} label={lang === "es" ? "Marc/h" : "Dials/h"} value={`${a.dials_per_hour ?? 0}`} status={dialStatus} />
                 <Metric icon={Clock} label={lang === "es" ? "Espera" : "Wait"} value={`${Math.floor((a.avg_wait_sec ?? 0) / 60)}m`} />
-                <Metric icon={RefreshCw} label="Callbacks" value={`${a.callbacks_converted ?? 0}/${a.callbacks_set ?? 0}`} color="violet" />
-                <Metric icon={Clock} label={lang === "es" ? "Prom." : "Avg"} value={`${Math.round(a.avg_talk_sec)}s`} />
+                <Metric icon={RefreshCw} label="Callbacks" value={`${a.callbacks_converted ?? 0}/${a.callbacks_set ?? 0}`} status={cbStatus} color="violet" />
+                <Metric icon={Clock} label={lang === "es" ? "Prom." : "Avg"} value={`${Math.round(a.avg_talk_sec)}s`} status={talkStatus} />
               </div>
             </div>
           );
@@ -275,18 +302,41 @@ export default function AgentsTab({
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
-                {sorted.map((a) => (
-                  <tr key={a.user} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
-                    <td className="px-4 py-2.5 font-medium text-zinc-800 dark:text-zinc-200">{a.full_name}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums">
-                      <span className={utilColor(a.utilization_rate)}>{((a.utilization_rate ?? 0) * 100).toFixed(0)}%</span>
-                    </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-sky-700 dark:text-sky-300">{a.dials_per_hour ?? 0}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-400">{Math.floor((a.pause_seconds ?? 0) / 60)}m</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-violet-700 dark:text-violet-300">{a.callbacks_converted ?? 0}/{a.callbacks_set ?? 0}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-emerald-700 dark:text-emerald-300 font-medium">{(a.close_rate * 100).toFixed(1)}%</td>
-                  </tr>
-                ))}
+                {sorted.map((a) => {
+                  const rUtil  = vsTarget(a.utilization_rate ?? 0, targets?.utilization    ?? null);
+                  const rDial  = vsTarget(a.dials_per_hour   ?? 0, targets?.dials_per_hour ?? null);
+                  const rClose = vsTarget(a.close_rate,             targets?.close_rate    ?? null);
+                  const rCb    = vsTarget(
+                    a.callbacks_set ? (a.callbacks_converted ?? 0) / a.callbacks_set : 0,
+                    targets?.callback_conv ?? null,
+                  );
+                  return (
+                    <tr key={a.user} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                      <td className="px-4 py-2.5 font-medium text-zinc-800 dark:text-zinc-200">{a.full_name}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums">
+                        <span className={rUtil ? statusTextColor(rUtil) : utilColor(a.utilization_rate ?? 0)}>
+                          {((a.utilization_rate ?? 0) * 100).toFixed(0)}%
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right tabular-nums">
+                        <span className={rDial ? statusTextColor(rDial) : "text-sky-700 dark:text-sky-300"}>
+                          {a.dials_per_hour ?? 0}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-400">{Math.floor((a.pause_seconds ?? 0) / 60)}m</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums">
+                        <span className={rCb ? statusTextColor(rCb) : "text-violet-700 dark:text-violet-300"}>
+                          {a.callbacks_converted ?? 0}/{a.callbacks_set ?? 0}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right tabular-nums font-medium">
+                        <span className={rClose ? statusTextColor(rClose) : "text-emerald-700 dark:text-emerald-300"}>
+                          {(a.close_rate * 100).toFixed(1)}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -327,8 +377,9 @@ function Sparkline({ data }: { data: number[] }) {
   );
 }
 
-function Metric({ icon: Icon, label, value, color = "zinc" }: {
+function Metric({ icon: Icon, label, value, color = "zinc", status }: {
   icon: React.ElementType; label: string; value: string; color?: string;
+  status?: "above" | "below" | "on" | null;
 }) {
   const colors: Record<string, string> = {
     zinc:    "text-zinc-800 dark:text-zinc-300",
@@ -337,12 +388,21 @@ function Metric({ icon: Icon, label, value, color = "zinc" }: {
     red:     "text-red-700 dark:text-red-400",
     violet:  "text-violet-700 dark:text-violet-300",
   };
+  // Status overrides color when a target is active
+  const effectiveColor = status === "above" ? "emerald" : status === "below" ? "red" : status === "on" ? "amber" : color;
+  const wrapClass = status === "above"
+    ? "border-emerald-500/30 dark:border-emerald-500/20 bg-emerald-500/5"
+    : status === "below"
+      ? "border-red-500/30 dark:border-red-500/20 bg-red-500/5"
+      : status === "on"
+        ? "border-amber-500/30 dark:border-amber-500/20 bg-amber-500/5"
+        : "border-zinc-200 dark:border-zinc-800/60 bg-zinc-50 dark:bg-zinc-900/50";
   return (
-    <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/60">
+    <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border ${wrapClass}`}>
       <Icon className="h-3.5 w-3.5 text-zinc-500" strokeWidth={2} />
       <div className="min-w-0 flex-1">
         <div className="text-[10px] uppercase tracking-wider text-zinc-700 dark:text-zinc-500 leading-none">{label}</div>
-        <div className={`text-xs font-mono tabular-nums leading-tight mt-0.5 ${colors[color] ?? colors.zinc}`}>{value}</div>
+        <div className={`text-xs font-mono tabular-nums leading-tight mt-0.5 ${colors[effectiveColor] ?? colors.zinc}`}>{value}</div>
       </div>
     </div>
   );
@@ -360,6 +420,24 @@ function SortHeader({ k, cur, dir, onClick, label }: {
       </button>
     </th>
   );
+}
+
+function VsTargetBadge({ status }: { status: "above" | "below" | "on" }) {
+  if (status === "above") return (
+    <span className="inline-flex items-center text-[9px] font-bold px-1 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 leading-none">▲</span>
+  );
+  if (status === "below") return (
+    <span className="inline-flex items-center text-[9px] font-bold px-1 py-0.5 rounded bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/20 leading-none">▼</span>
+  );
+  return (
+    <span className="inline-flex items-center text-[9px] font-bold px-1 py-0.5 rounded bg-zinc-200/80 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-300 dark:border-zinc-700 leading-none">=</span>
+  );
+}
+
+function statusTextColor(status: "above" | "below" | "on"): string {
+  if (status === "above") return "text-emerald-700 dark:text-emerald-300";
+  if (status === "below") return "text-red-700 dark:text-red-400";
+  return "text-amber-700 dark:text-amber-300"; // "on" = at target, amber
 }
 
 function utilColor(rate: number) {
