@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Bell, Users, BarChart3, Sparkles, Target,
-  Database, Cpu, Server, Sun, Moon, Loader2,
+  Database, Cpu, Server, Sun, Moon, Loader2, MessageSquare,
 } from "lucide-react";
 import type {
   Lead, AgentStat, Disposition, CallHour, SalesDay, WeeklyInsight, Health, CampaignStat,
@@ -19,6 +19,7 @@ import AgentsTab from "./AgentsTab";
 import MomentumTab from "./MomentumTab";
 import InsightsTab from "./InsightsTab";
 import AlertsTab from "./AlertsTab";
+import ChatTab from "./ChatTab";
 
 type Props = {
   initialLang: Lang;
@@ -42,7 +43,7 @@ type Props = {
   matrix: AgentCampaignCell[];
 };
 
-type TabKey = "summary" | "alerts" | "leads" | "agents" | "momentum" | "insights";
+type TabKey = "summary" | "alerts" | "leads" | "agents" | "momentum" | "insights" | "chat";
 type Theme = "light" | "dark";
 
 const NAV = [
@@ -51,7 +52,8 @@ const NAV = [
   { key: "leads"    as const, icon: Target,     labelEs: "Leads",    labelEn: "Leads"    },
   { key: "agents"   as const, icon: Users,      labelEs: "Agentes",  labelEn: "Agents"   },
   { key: "momentum" as const, icon: Sparkles,   labelEs: "Momentum", labelEn: "Momentum" },
-  { key: "insights" as const, icon: BarChart3,  labelEs: "Análisis", labelEn: "Insights" },
+  { key: "insights" as const, icon: BarChart3,      labelEs: "Análisis",  labelEn: "Insights" },
+  { key: "chat"     as const, icon: MessageSquare,  labelEs: "Chat IA",   labelEn: "AI Chat"  },
 ];
 
 export default function Dashboard(props: Props) {
@@ -63,7 +65,7 @@ export default function Dashboard(props: Props) {
   const [lang, setLang] = useState<Lang>(props.initialLang);
   const [tab, setTabState] = useState<TabKey>(() => {
     const tabParam = searchParams.get("tab") as TabKey | null;
-    return tabParam && ["summary", "alerts", "leads", "agents", "momentum", "insights"].includes(tabParam) ? tabParam : "summary";
+    return tabParam && ["summary", "alerts", "leads", "agents", "momentum", "insights", "chat"].includes(tabParam) ? tabParam : "summary";
   });
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "dark";
@@ -188,6 +190,7 @@ export default function Dashboard(props: Props) {
               {tab === "agents"   && <><Users className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Agentes" : "Agents"}</>}
               {tab === "momentum" && <><Sparkles className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Momentum" : "Momentum"}</>}
               {tab === "insights" && <><BarChart3 className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Análisis" : "Insights"}</>}
+              {tab === "chat"     && <><MessageSquare className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Chat IA" : "AI Chat"}</>}
             </h1>
 
             <span className={`hidden sm:inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border font-medium ${
@@ -289,6 +292,7 @@ export default function Dashboard(props: Props) {
           {tab === "leads"    && <LeadsTab lang={lang} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
           {tab === "agents"   && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} range={props.initialRange} />}
           {tab === "momentum" && <MomentumTab lang={lang} agents={props.agents} momentum={props.momentum} callTimes={props.callTimes} salesTrend={props.salesTrend} />}
+          {tab === "chat" && <ChatTab lang={lang} />}
           {tab === "insights" && (
             <InsightsTab
               lang={lang}
