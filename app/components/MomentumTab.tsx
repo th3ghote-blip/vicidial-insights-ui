@@ -434,6 +434,20 @@ function Column({ title, icon: Icon, color, children, emptyMsg }: {
   );
 }
 
+function MomStat({ label, value, sub, color = "zinc" }: { label: string; value: string; sub?: string; color?: string }) {
+  const val: Record<string, string> = {
+    zinc: "text-zinc-900 dark:text-zinc-100", emerald: "text-emerald-700 dark:text-emerald-300",
+    amber: "text-amber-700 dark:text-amber-300", red: "text-red-700 dark:text-red-400",
+  };
+  return (
+    <div className="flex-1 px-3 sm:px-4 py-2.5 min-w-[90px]">
+      <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold leading-none mb-0.5 truncate">{label}</div>
+      <div className={`text-base font-semibold tabular-nums leading-none ${val[color] ?? val.zinc}`}>{value}</div>
+      {sub && <div className="text-[10px] text-zinc-500 leading-none mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function MomentumTab({ lang, agents, momentum, momentum90, callTimes, salesTrend }: {
   lang: Lang;
@@ -457,8 +471,26 @@ export default function MomentumTab({ lang, agents, momentum, momentum90, callTi
   const watch    = withFlags.filter(x => x.flags.some(f => f.tier === "watch") && !x.flags.some(f => f.tier === "hot"));
   const badBehav = withFlags.filter(x => x.flags.some(f => f.tier === "flag"));
 
+  const risingCount = momentum.filter(m => m.status === "rising_star" || m.status === "on_streak").length;
+  const attnCount   = momentum.filter(m => m.status === "needs_attention").length;
+  const coolingCount = momentum.filter(m => m.status === "cooling").length;
+  const stableCount = momentum.filter(m => m.status === "stable").length;
+  const avgChange   = momentum.length > 0
+    ? momentum.reduce((s, m) => s + m.change_pct, 0) / momentum.length : 0;
+
   return (
     <section className="space-y-5">
+      {/* Tab stat bar */}
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm overflow-hidden">
+        <div className="flex flex-wrap divide-x divide-zinc-200 dark:divide-zinc-800/80">
+          <MomStat label={lang === "es" ? "En racha / alza" : "Hot / rising"} value={risingCount.toString()} sub={lang === "es" ? "agentes" : "agents"} color="emerald" />
+          <MomStat label={lang === "es" ? "Estables" : "Stable"} value={stableCount.toString()} sub={lang === "es" ? "agentes" : "agents"} color="zinc" />
+          <MomStat label={lang === "es" ? "Enfriándose" : "Cooling"} value={coolingCount.toString()} sub={lang === "es" ? "agentes" : "agents"} color="amber" />
+          <MomStat label={lang === "es" ? "Necesitan atención" : "Need attention"} value={attnCount.toString()} sub={lang === "es" ? "agentes" : "agents"} color="red" />
+          <MomStat label={lang === "es" ? "Cambio promedio" : "Avg change"} value={`${avgChange >= 0 ? "+" : ""}${avgChange.toFixed(1)}%`} sub={lang === "es" ? "vs período ant." : "vs prior period"} color={avgChange >= 0 ? "emerald" : "red"} />
+        </div>
+      </div>
+
       {/* Header + window toggle */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>

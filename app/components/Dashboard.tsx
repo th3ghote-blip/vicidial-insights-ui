@@ -13,7 +13,6 @@ import type {
   AgentMomentum, SourceROI, PipelineForecast, ContactVelocity, Alert, AgentCampaignCell,
 } from "@/lib/api";
 import { t, type Lang } from "@/lib/i18n";
-import KpiStrip from "./KpiStrip";
 import AiBanner from "./AiBanner";
 import SummaryTab from "./SummaryTab";
 import LeadsTab from "./LeadsTab";
@@ -306,8 +305,7 @@ export default function Dashboard(props: Props) {
         </header>
 
         <main className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-          <KpiStrip lang={lang} leads={props.leads} agents={props.agents} salesTrend={props.salesTrend} forecast={props.forecast} range={props.initialRange} targets={targets} />
-          {tab === "summary"   && <SummaryTab lang={lang} salesTrend={props.salesTrend} callTimes={props.callTimes} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} weekly={props.weekly} momentum={props.momentum} targets={targets} />}
+          {tab === "summary"   && <SummaryTab lang={lang} salesTrend={props.salesTrend} callTimes={props.callTimes} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} weekly={props.weekly} momentum={props.momentum} targets={targets} forecast={props.forecast} />}
           {tab === "leads"     && <LeadsTab lang={lang} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
           {tab === "agents"    && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} range={props.initialRange} targets={targets} />}
           {tab === "momentum"  && <MomentumTab lang={lang} agents={props.agents} momentum={props.momentum} momentum90={props.momentum90} callTimes={props.callTimes} salesTrend={props.salesTrend} />}

@@ -94,8 +94,29 @@ export default function AgentsTab({
     { key: "talk",        labelEs: "Prom.",      labelEn: "Avg talk"  },
   ];
 
+  // Tab-level stats
+  const teamAvgClose = agents.length > 0
+    ? agents.reduce((s, a) => s + a.close_rate, 0) / agents.length : 0;
+  const teamAvgUtil = agents.length > 0
+    ? agents.reduce((s, a) => s + (a.utilization_rate ?? 0), 0) / agents.length : 0;
+  const totalCallbacks = agents.reduce((s, a) => s + (a.callbacks_set ?? 0), 0);
+  const risingCount = momentum.filter(m => m.status === "rising_star" || m.status === "on_streak").length;
+  const attnCount   = momentum.filter(m => m.status === "needs_attention").length;
+
   return (
     <section className="space-y-5">
+      {/* Tab stat bar */}
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm overflow-hidden">
+        <div className="flex flex-wrap divide-x divide-zinc-200 dark:divide-zinc-800/80">
+          <TabStat label={lang === "es" ? "Agentes activos" : "Active agents"} value={agents.length.toString()} sub={lang === "es" ? `últ. ${range}d` : `last ${range}d`} color="zinc" />
+          <TabStat label={lang === "es" ? "Cierre promedio" : "Avg close rate"} value={`${(teamAvgClose * 100).toFixed(1)}%`} sub={lang === "es" ? "del equipo" : "team avg"} color="emerald" />
+          <TabStat label={lang === "es" ? "Utilización media" : "Avg utilization"} value={`${(teamAvgUtil * 100).toFixed(0)}%`} sub={lang === "es" ? "del equipo" : "team avg"} color={teamAvgUtil >= 0.7 ? "emerald" : teamAvgUtil >= 0.5 ? "amber" : "red"} />
+          <TabStat label={lang === "es" ? "Callbacks pendientes" : "Callbacks pending"} value={totalCallbacks.toLocaleString()} sub={lang === "es" ? "agendados" : "scheduled"} color="violet" />
+          <TabStat label={lang === "es" ? "En racha ↑" : "Rising ↑"} value={risingCount.toString()} sub={lang === "es" ? "agentes" : "agents"} color="sky" />
+          {attnCount > 0 && <TabStat label={lang === "es" ? "Necesitan atención" : "Need attention"} value={attnCount.toString()} sub={lang === "es" ? "agentes" : "agents"} color="red" />}
+        </div>
+      </div>
+
       <div>
         <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
           {lang === "es" ? "Agentes" : "Agents"}
@@ -419,6 +440,21 @@ function SortHeader({ k, cur, dir, onClick, label }: {
         <ArrowUpDown className="h-3 w-3" strokeWidth={2} />
       </button>
     </th>
+  );
+}
+
+function TabStat({ label, value, sub, color = "zinc" }: { label: string; value: string; sub?: string; color?: string }) {
+  const val: Record<string, string> = {
+    zinc: "text-zinc-900 dark:text-zinc-100", emerald: "text-emerald-700 dark:text-emerald-300",
+    amber: "text-amber-700 dark:text-amber-300", red: "text-red-700 dark:text-red-400",
+    violet: "text-violet-700 dark:text-violet-300", sky: "text-sky-700 dark:text-sky-300",
+  };
+  return (
+    <div className="flex-1 px-3 sm:px-4 py-2.5 min-w-[90px]">
+      <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold leading-none mb-0.5 truncate">{label}</div>
+      <div className={`text-base font-semibold tabular-nums leading-none ${val[color] ?? val.zinc}`}>{value}</div>
+      {sub && <div className="text-[10px] text-zinc-500 leading-none mt-0.5">{sub}</div>}
+    </div>
   );
 }
 

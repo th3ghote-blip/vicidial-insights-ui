@@ -46,8 +46,26 @@ export default function LeadsTab({ lang, leads, range, rangeLabel }: { lang: Lan
     { key: "dnc_review",   color: "red"     },
   ];
 
+  const hotLeads     = leads.filter(l => l.score >= 60).length;
+  const callNow      = leads.filter(l => l.recommendation === "call_now").length;
+  const callbackDue  = leads.filter(l => l.recommendation === "callback_due").length;
+  const avgScore     = leads.length > 0 ? Math.round(leads.reduce((s, l) => s + l.score, 0) / leads.length) : 0;
+  const dncReview    = leads.filter(l => l.recommendation === "dnc_review").length;
+
   return (
     <section className="space-y-5">
+      {/* Tab stat bar */}
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm overflow-hidden">
+        <div className="flex flex-wrap divide-x divide-zinc-200 dark:divide-zinc-800/80">
+          <LeadStat label={lang === "es" ? "Total leads" : "Total leads"} value={leads.length.toString()} sub={lang === "es" ? "en el sistema" : "in system"} color="zinc" />
+          <LeadStat label={lang === "es" ? "Leads calientes" : "Hot leads"} value={hotLeads.toString()} sub={lang === "es" ? "score ≥ 60" : "score ≥ 60"} color="amber" />
+          <LeadStat label={lang === "es" ? "Llamar ahora" : "Call now"} value={callNow.toString()} sub={lang === "es" ? "prioritarios" : "priority"} color="emerald" />
+          <LeadStat label={lang === "es" ? "Callbacks pendientes" : "Callbacks due"} value={callbackDue.toString()} sub={lang === "es" ? "programados" : "scheduled"} color="sky" />
+          <LeadStat label={lang === "es" ? "Score promedio" : "Avg score"} value={avgScore.toString()} sub={lang === "es" ? "de 100" : "out of 100"} color={avgScore >= 60 ? "emerald" : avgScore >= 40 ? "amber" : "zinc"} />
+          {dncReview > 0 && <LeadStat label="DNC review" value={dncReview.toString()} sub={lang === "es" ? "revisar" : "flagged"} color="red" />}
+        </div>
+      </div>
+
       <div>
         <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">{tr.leadsHeader}</h2>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
@@ -165,6 +183,21 @@ export default function LeadsTab({ lang, leads, range, rangeLabel }: { lang: Lan
         </aside>
       </div>
     </section>
+  );
+}
+
+function LeadStat({ label, value, sub, color = "zinc" }: { label: string; value: string; sub?: string; color?: string }) {
+  const val: Record<string, string> = {
+    zinc: "text-zinc-900 dark:text-zinc-100", emerald: "text-emerald-700 dark:text-emerald-300",
+    amber: "text-amber-700 dark:text-amber-300", red: "text-red-700 dark:text-red-400",
+    sky: "text-sky-700 dark:text-sky-300",
+  };
+  return (
+    <div className="flex-1 px-3 sm:px-4 py-2.5 min-w-[90px]">
+      <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold leading-none mb-0.5 truncate">{label}</div>
+      <div className={`text-base font-semibold tabular-nums leading-none ${val[color] ?? val.zinc}`}>{value}</div>
+      {sub && <div className="text-[10px] text-zinc-500 leading-none mt-0.5">{sub}</div>}
+    </div>
   );
 }
 
