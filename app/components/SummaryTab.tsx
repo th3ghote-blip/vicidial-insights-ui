@@ -212,7 +212,7 @@ export default function SummaryTab({
       <div className="grid lg:grid-cols-5 gap-4">
 
         {/* Left col: chart + campaign table */}
-        <div className="lg:col-span-3 space-y-4">
+        <div className="lg:col-span-3 flex flex-col gap-4">
 
           {/* Chart */}
           <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4">
@@ -258,8 +258,8 @@ export default function SummaryTab({
             )}
           </div>
 
-          {/* Campaign table */}
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 overflow-hidden">
+          {/* Campaign table — flex-1 so it fills remaining height matching right col */}
+          <div className="flex-1 rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 overflow-hidden">
             <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800/60">
               <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
                 {lang === "es" ? "Campañas" : "Campaigns"}
@@ -412,14 +412,27 @@ export default function SummaryTab({
   );
 }
 
-/** Renders **bold** markers from the AI summary without needing a markdown lib. */
+/** Renders **bold** and # headings from AI summary without a markdown lib. */
 function InlineMarkdown({ text }: { text: string }) {
-  // Split on paragraph breaks first, then handle **bold** within each block
   const blocks = text.split(/\n{2,}/).filter(b => b.trim());
   return (
     <>
       {blocks.map((block, bi) => {
-        const parts = block.trim().split(/\*\*(.*?)\*\*/g);
+        const trimmed = block.trim();
+        // Strip leading # heading markers — render as bold label, not a giant h1
+        const headingMatch = trimmed.match(/^#{1,3}\s+(.+)$/);
+        if (headingMatch) {
+          return (
+            <span key={bi}>
+              {bi > 0 && <><br /><br /></>}
+              <span className="text-[11px] uppercase tracking-wider font-bold text-zinc-500 dark:text-zinc-400">
+                {headingMatch[1]}
+              </span>
+            </span>
+          );
+        }
+        // Inline **bold**
+        const parts = trimmed.split(/\*\*(.*?)\*\*/g);
         return (
           <span key={bi}>
             {bi > 0 && <><br /><br /></>}
