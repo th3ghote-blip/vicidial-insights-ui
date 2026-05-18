@@ -78,10 +78,11 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   const range = daysBack;
   const momentumDays = rangeLabel === "today" ? 7 : range;
 
-  // Fire all 14 calls in parallel; never let one failure kill the page.
+  // Fire all 15 calls in parallel; never let one failure kill the page.
+  // momentum90 is always 13 weekly points regardless of selected range.
   const [
     rHealth, rLeads, rAgents, rDispos, rCallTimes, rSales,
-    rWeekly, rCampaigns, rMomentum, rSources, rForecast, rVelocity, rAlerts, rMatrix,
+    rWeekly, rCampaigns, rMomentum, rMomentum90, rSources, rForecast, rVelocity, rAlerts, rMatrix,
   ] = await Promise.allSettled([
     api.health(),
     api.leads(100, range),
@@ -92,6 +93,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
     api.weekly("es"),
     api.campaignPerformance(range),
     api.agentMomentum(momentumDays),
+    api.agentMomentum(91),          // 13-week history for the 90d toggle
     api.leadSources(range),
     api.forecast(),
     api.contactVelocity(7),
@@ -107,7 +109,8 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   const salesRes  = ok(rSales,     { days: [] });
   const weekly    = ok(rWeekly,    FALLBACK_WEEKLY);
   const campaignsRes = ok(rCampaigns, { campaigns: [] });
-  const momentumRes  = ok(rMomentum,  { agents: [] });
+  const momentumRes   = ok(rMomentum,   { agents: [] });
+  const momentum90Res = ok(rMomentum90, { agents: [] });
   const sourcesRes   = ok(rSources,   { sources: [] });
   const forecast  = ok(rForecast,  FALLBACK_FORECAST);
   const velocity  = ok(rVelocity,  FALLBACK_VELOCITY);
@@ -130,6 +133,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
       weekly={weekly}
       campaigns={campaignsRes.campaigns}
       momentum={momentumRes.agents}
+      momentum90={momentum90Res.agents}
       sources={sourcesRes.sources}
       forecast={forecast}
       velocity={velocity}

@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
-  Bell, Users, BarChart3, Sparkles, Target,
+  Users, BarChart3, Sparkles, Target, LineChart,
   Database, Cpu, Server, Sun, Moon, Loader2, MessageSquare,
 } from "lucide-react";
 import type {
@@ -18,7 +18,6 @@ import LeadsTab from "./LeadsTab";
 import AgentsTab from "./AgentsTab";
 import MomentumTab from "./MomentumTab";
 import InsightsTab from "./InsightsTab";
-import AlertsTab from "./AlertsTab";
 import ChatTab from "./ChatTab";
 
 type Props = {
@@ -36,6 +35,7 @@ type Props = {
   weekly: WeeklyInsight;
   campaigns: CampaignStat[];
   momentum: AgentMomentum[];
+  momentum90: AgentMomentum[];
   sources: SourceROI[];
   forecast: PipelineForecast;
   velocity: ContactVelocity;
@@ -43,17 +43,16 @@ type Props = {
   matrix: AgentCampaignCell[];
 };
 
-type TabKey = "summary" | "alerts" | "leads" | "agents" | "momentum" | "insights" | "chat";
+type TabKey = "summary" | "analytics" | "agents" | "momentum" | "chat" | "leads";
 type Theme = "light" | "dark";
 
 const NAV = [
-  { key: "summary"  as const, icon: BarChart3,  labelEs: "Resumen",  labelEn: "Summary"  },
-  { key: "alerts"   as const, icon: Bell,       labelEs: "Alertas",  labelEn: "Alerts"   },
-  { key: "leads"    as const, icon: Target,     labelEs: "Leads",    labelEn: "Leads"    },
-  { key: "agents"   as const, icon: Users,      labelEs: "Agentes",  labelEn: "Agents"   },
-  { key: "momentum" as const, icon: Sparkles,   labelEs: "Momentum", labelEn: "Momentum" },
-  { key: "insights" as const, icon: BarChart3,      labelEs: "Análisis",  labelEn: "Insights" },
-  { key: "chat"     as const, icon: MessageSquare,  labelEs: "Chat IA",   labelEn: "AI Chat"  },
+  { key: "summary"   as const, icon: BarChart3,     labelEs: "Resumen",   labelEn: "Summary"   },
+  { key: "analytics" as const, icon: LineChart,     labelEs: "Análisis",  labelEn: "Analytics" },
+  { key: "agents"    as const, icon: Users,         labelEs: "Agentes",   labelEn: "Agents"    },
+  { key: "momentum"  as const, icon: Sparkles,      labelEs: "Momentum",  labelEn: "Momentum"  },
+  { key: "chat"      as const, icon: MessageSquare, labelEs: "Chat IA",   labelEn: "AI Chat"   },
+  { key: "leads"     as const, icon: Target,        labelEs: "Leads",     labelEn: "Leads"     },
 ];
 
 export default function Dashboard(props: Props) {
@@ -65,7 +64,7 @@ export default function Dashboard(props: Props) {
   const [lang, setLang] = useState<Lang>(props.initialLang);
   const [tab, setTabState] = useState<TabKey>(() => {
     const tabParam = searchParams.get("tab") as TabKey | null;
-    return tabParam && ["summary", "alerts", "leads", "agents", "momentum", "insights", "chat"].includes(tabParam) ? tabParam : "summary";
+    return tabParam && ["summary", "analytics", "agents", "momentum", "chat", "leads"].includes(tabParam) ? tabParam : "summary";
   });
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "dark";
@@ -76,6 +75,7 @@ export default function Dashboard(props: Props) {
   const [customEnd, setCustomEnd] = useState(props.initialEndDate || "");
   const tr = t[lang];
   const urgentCount = props.alerts.filter(a => a.severity === "high").length;
+  void urgentCount; // available for future badge use
 
   // Apply theme class on mount and when theme changes
   useEffect(() => {
@@ -148,7 +148,7 @@ export default function Dashboard(props: Props) {
                 )}
                 <Icon className={`h-4 w-4 ${active ? "text-emerald-500 dark:text-emerald-400" : "text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300"}`} strokeWidth={2} />
                 <span className="flex-1 text-left">{lang === "es" ? n.labelEs : n.labelEn}</span>
-                {n.key === "alerts" && urgentCount > 0 && (
+                {n.key === "summary" && urgentCount > 0 && (
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-red-500/15 text-red-600 dark:text-red-300 border border-red-500/30">
                     {urgentCount}
                   </span>
@@ -184,13 +184,12 @@ export default function Dashboard(props: Props) {
             </div>
 
             <h1 className="hidden md:flex text-base font-medium text-zinc-700 dark:text-zinc-200 items-center gap-2">
-              {tab === "summary"  && <><BarChart3 className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Resumen" : "Summary"}</>}
-              {tab === "alerts"   && <><Bell className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Alertas" : "Alerts"}</>}
-              {tab === "leads"    && <><Target className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Leads" : "Leads"}</>}
-              {tab === "agents"   && <><Users className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Agentes" : "Agents"}</>}
-              {tab === "momentum" && <><Sparkles className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Momentum" : "Momentum"}</>}
-              {tab === "insights" && <><BarChart3 className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Análisis" : "Insights"}</>}
-              {tab === "chat"     && <><MessageSquare className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Chat IA" : "AI Chat"}</>}
+              {tab === "summary"   && <><BarChart3 className="h-4 w-4 text-zinc-500"/>     {lang === "es" ? "Resumen"  : "Summary"  }</>}
+              {tab === "analytics" && <><LineChart className="h-4 w-4 text-zinc-500"/>     {lang === "es" ? "Análisis" : "Analytics"}</>}
+              {tab === "agents"    && <><Users className="h-4 w-4 text-zinc-500"/>         {lang === "es" ? "Agentes"  : "Agents"   }</>}
+              {tab === "momentum"  && <><Sparkles className="h-4 w-4 text-zinc-500"/>      {lang === "es" ? "Momentum" : "Momentum" }</>}
+              {tab === "chat"      && <><MessageSquare className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Chat IA"  : "AI Chat"  }</>}
+              {tab === "leads"     && <><Target className="h-4 w-4 text-zinc-500"/>        {lang === "es" ? "Leads"    : "Leads"    }</>}
             </h1>
 
             <span className={`hidden sm:inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border font-medium ${
@@ -277,7 +276,7 @@ export default function Dashboard(props: Props) {
                   }`}>
                   <Icon className="h-4 w-4" strokeWidth={2} />
                   <span>{lang === "es" ? n.labelEs : n.labelEn}</span>
-                  {n.key === "alerts" && urgentCount > 0 && (
+                  {n.key === "summary" && urgentCount > 0 && (
                     <span className="text-[10px] font-mono px-1.5 py-px rounded bg-red-500/15 text-red-600 dark:text-red-300">{urgentCount}</span>
                   )}
                 </button>
@@ -287,13 +286,12 @@ export default function Dashboard(props: Props) {
         </header>
 
         <main className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-          {tab === "summary"  && <SummaryTab lang={lang} salesTrend={props.salesTrend} callTimes={props.callTimes} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
-          {tab === "alerts"   && <AlertsTab lang={lang} alerts={props.alerts} onJump={setTab} />}
-          {tab === "leads"    && <LeadsTab lang={lang} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
-          {tab === "agents"   && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} range={props.initialRange} />}
-          {tab === "momentum" && <MomentumTab lang={lang} agents={props.agents} momentum={props.momentum} callTimes={props.callTimes} salesTrend={props.salesTrend} />}
-          {tab === "chat" && <ChatTab lang={lang} />}
-          {tab === "insights" && (
+          {tab === "summary"   && <SummaryTab lang={lang} salesTrend={props.salesTrend} callTimes={props.callTimes} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
+          {tab === "leads"     && <LeadsTab lang={lang} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
+          {tab === "agents"    && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} range={props.initialRange} />}
+          {tab === "momentum"  && <MomentumTab lang={lang} agents={props.agents} momentum={props.momentum} momentum90={props.momentum90} callTimes={props.callTimes} salesTrend={props.salesTrend} />}
+          {tab === "chat"      && <ChatTab lang={lang} />}
+          {tab === "analytics" && (
             <InsightsTab
               lang={lang}
               weekly={props.weekly}

@@ -116,6 +116,14 @@ export type AgentMomentum = {
   status: "rising_star" | "needs_attention" | "cooling" | "on_streak" | "stable";
   weekly_series: number[];
   series_granularity: "daily" | "weekly";
+  // v2 — comparison & fatigue
+  team_avg_series: number[];
+  own_baseline: number;
+  fatigue_score: number;
+  fatigue_flags: ("pausas_excesivas" | "ritmo_cayendo" | "esfuerzo_sin_resultado" | "callbacks_sin_seguimiento")[];
+  pause_ratio: number;
+  dials_per_hour: number;
+  utilization_rate: number;
 };
 
 export type SourceROI = {
