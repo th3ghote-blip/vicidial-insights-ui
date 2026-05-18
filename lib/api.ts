@@ -15,15 +15,34 @@ if (!API_BASE || !API_TOKEN) {
 }
 
 async function fetchJSON<T>(path: string, revalidate = 60): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Authorization: `Bearer ${API_TOKEN}` },
-    next: { revalidate },
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`vicidial-api ${path} -> ${res.status}: ${body.slice(0, 200)}`);
+  const MAX_ATTEMPTS = 3;
+  let lastErr: unknown;
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(`${API_BASE}${path}`, {
+        headers: { Authorization: `Bearer ${API_TOKEN}` },
+        next: { revalidate },
+      });
+      // Don't retry on auth or client errors — only on 5xx / network
+      if (res.status >= 400 && res.status < 500) {
+        const body = await res.text().catch(() => "");
+        throw new Error(`vicidial-api ${path} -> ${res.status}: ${body.slice(0, 200)}`);
+      }
+      if (!res.ok) {
+        throw new Error(`vicidial-api ${path} -> ${res.status}`);
+      }
+      return res.json();
+    } catch (err) {
+      lastErr = err;
+      // Don't retry on 4xx (re-thrown above without retry)
+      if (err instanceof Error && /-> 4\d\d/.test(err.message)) throw err;
+      if (attempt < MAX_ATTEMPTS - 1) {
+        await new Promise(r => setTimeout(r, 400 * Math.pow(2, attempt))); // 400ms, 800ms
+      }
+    }
   }
-  return res.json();
+  throw lastErr;
 }
 
 // ---------- Response types (match the FastAPI shapes) ------------------------
