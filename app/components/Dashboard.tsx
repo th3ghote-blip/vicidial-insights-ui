@@ -286,7 +286,7 @@ export default function Dashboard(props: Props) {
         </header>
 
         <main className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-          {tab === "summary"   && <SummaryTab lang={lang} salesTrend={props.salesTrend} callTimes={props.callTimes} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
+          {tab === "summary"   && <SummaryTab lang={lang} salesTrend={props.salesTrend} callTimes={props.callTimes} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} weekly={props.weekly} momentum={props.momentum} />}
           {tab === "leads"     && <LeadsTab lang={lang} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
           {tab === "agents"    && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} range={props.initialRange} />}
           {tab === "momentum"  && <MomentumTab lang={lang} agents={props.agents} momentum={props.momentum} momentum90={props.momentum90} callTimes={props.callTimes} salesTrend={props.salesTrend} />}
