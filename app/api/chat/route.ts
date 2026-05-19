@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { api } from "@/lib/api";
+import { rateLimit, getIp } from "@/lib/rate-limit";
 
 const API_BASE  = process.env.VICIDIAL_API_BASE!;
 const API_TOKEN = process.env.VICIDIAL_API_TOKEN!;
@@ -96,7 +97,7 @@ async function tryDirect(
       max_tokens: 400,
       system,
       messages: [
-        ...history.slice(-10).map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
+        ...history.map(m => ({ role: m.role as "user" | "assistant", content: m.content })),
         { role: "user" as const, content: question },
       ],
     });
@@ -125,6 +126,12 @@ Try again in a few minutes or check the Railway connection.`;
 // ── Handler ──────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  // Rate-limit: 20 requests per minute per IP
+  const ip = getIp(req);
+  if (!rateLimit(`${ip}:chat`, 20, 60 * 1000)) {
+    return NextResponse.json({ error: "Too many requests — slow down" }, { status: 429 });
+  }
+
   const body = await req.json();
   const { question, lang = "es", history = [] } = body as {
     question: string;
@@ -132,12 +139,29 @@ export async function POST(req: NextRequest) {
     history?: { role: string; content: string }[];
   };
 
-  // Tier 1 — Railway
-  const railwayAnswer = await tryRailway(body);
+  // Input validation
+  if (!question || typeof question !== "string") {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+  if (question.length > 2000) {
+    return NextResponse.json({ error: "Question too long (max 2000 chars)" }, { status: 400 });
+  }
+
+  // Sanitize history: last 10 entries, cap each entry to 1000 chars
+  const safeHistory = Array.isArray(history)
+    ? history.slice(-10).map(m => ({
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: typeof m.content === "string" ? m.content.slice(0, 1000) : "",
+      }))
+    : [];
+
+  // Tier 1 — Railway (pass original body so backend gets full context)
+  const railwayBody = { question, lang, history: safeHistory };
+  const railwayAnswer = await tryRailway(railwayBody);
   if (railwayAnswer) return NextResponse.json({ answer: railwayAnswer });
 
   // Tier 2 — direct Anthropic
-  const directAnswer = await tryDirect(question, history, lang);
+  const directAnswer = await tryDirect(question, safeHistory, lang);
   if (directAnswer) return NextResponse.json({ answer: directAnswer });
 
   // Tier 3 — demo note
