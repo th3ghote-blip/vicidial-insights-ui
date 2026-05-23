@@ -5,8 +5,9 @@ import {
   Search, X, Phone, Clock, RefreshCw, TrendingUp, TrendingDown, Minus,
   Star, AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, Trophy, Filter,
 } from "lucide-react";
-import type { AgentStat, AgentMomentum } from "@/lib/api";
+import type { AgentStat, AgentMomentum, AgentHourlyPerf, AgentDispositionBreakdown, LoginPattern } from "@/lib/api";
 import { t, type Lang } from "@/lib/i18n";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { type Targets, vsTarget } from "@/lib/targets";
 
 type SortKey = "rank" | "close_rate" | "sales" | "calls" | "utilization" | "callbacks" | "wait" | "talk";
@@ -24,7 +25,13 @@ const MOMENTUM_META: Record<AgentMomentum["status"], {
 
 export default function AgentsTab({
   lang, agents, momentum, range, targets,
-}: { lang: Lang; agents: AgentStat[]; momentum: AgentMomentum[]; range: number; targets?: Targets }) {
+  agentHourlyPerf, agentDispositions, loginPatterns,
+}: {
+  lang: Lang; agents: AgentStat[]; momentum: AgentMomentum[]; range: number; targets?: Targets;
+  agentHourlyPerf?: AgentHourlyPerf[];
+  agentDispositions?: AgentDispositionBreakdown[];
+  loginPatterns?: LoginPattern[];
+}) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("rank");
   const [sortDir, setSortDir] = useState<"asc"|"desc">("desc");
@@ -363,6 +370,185 @@ export default function AgentsTab({
           </div>
         </div>
       </div>
+      {/* Section A: Disposition Breakdown */}
+      {agentDispositions && agentDispositions.length > 0 && (() => {
+        const COLOR_MAP: Record<string, string> = {
+          emerald: "bg-emerald-500",
+          red:     "bg-red-500",
+          amber:   "bg-amber-500",
+          violet:  "bg-violet-500",
+          zinc:    "bg-zinc-500",
+        };
+        const sorted = [...agentDispositions].sort((a, b) => b.sale_pct - a.sale_pct);
+        return (
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 shadow-sm dark:shadow-none space-y-4">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {lang === "es" ? "Distribución de disposiciones por agente" : "Disposition Breakdown by Agent"}
+            </h3>
+            {/* Legend */}
+            <div className="flex flex-wrap gap-3 text-[11px] text-zinc-500">
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-emerald-500 inline-block" />{lang === "es" ? "Venta" : "Sale"}</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-violet-500 inline-block" />Callback</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-zinc-500 inline-block" />{lang === "es" ? "No interesado" : "Not Interested"}</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-amber-500 inline-block" />{lang === "es" ? "Contestador" : "Ans. Machine"}</span>
+              <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-500 inline-block" />DNC</span>
+            </div>
+            <div className="space-y-3">
+              {sorted.map(agent => (
+                <div key={agent.user} className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-medium text-zinc-800 dark:text-zinc-200 truncate">{agent.full_name}</span>
+                    <span className="text-[11px] text-zinc-500 tabular-nums shrink-0">
+                      {(agent.sale_pct * 100).toFixed(1)}% {lang === "es" ? "ventas" : "sales"}
+                    </span>
+                  </div>
+                  {/* Stacked bar */}
+                  <div className="flex h-3 rounded-full overflow-hidden w-full gap-px">
+                    {agent.dispositions.map((d, i) => (
+                      d.pct > 0 ? (
+                        <div
+                          key={i}
+                          className={`${COLOR_MAP[d.color] ?? "bg-zinc-500"} opacity-80 hover:opacity-100 transition-opacity`}
+                          style={{ width: `${d.pct * 100}%` }}
+                          title={`${lang === "es" ? d.label_es : d.label_en}: ${(d.pct * 100).toFixed(1)}%`}
+                        />
+                      ) : null
+                    ))}
+                  </div>
+                  {/* Flags */}
+                  {agent.flags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {agent.flags.map((flag, fi) => (
+                        <span key={fi} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+                          ⚠️ {flag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Section B: Burnout Signals */}
+      {agentHourlyPerf && agentHourlyPerf.some(a => a.fatigue_detected) && (() => {
+        const fatigued = agentHourlyPerf.filter(a => a.fatigue_detected);
+        return (
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 shadow-sm dark:shadow-none space-y-4">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {lang === "es" ? "Señales de agotamiento" : "Burnout Signals"}
+            </h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {fatigued.map(agent => {
+                const drop = agent.avg_close_first_half > 0
+                  ? ((agent.avg_close_first_half - agent.avg_close_second_half) / agent.avg_close_first_half * 100).toFixed(0)
+                  : "0";
+                const chartData = agent.hourly.map(h => ({
+                  hour: h.hour_of_shift,
+                  rate: Math.round(h.close_rate * 1000) / 10,
+                }));
+                return (
+                  <div key={agent.user} className="space-y-1.5 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30">
+                    <div className="text-xs font-medium text-zinc-800 dark:text-zinc-200">{agent.full_name}</div>
+                    <div className="text-[11px] text-red-600 dark:text-red-400">
+                      ↓ {drop}% {lang === "es" ? "caída de 1ª a 2ª mitad" : "drop from first half to second half"}
+                    </div>
+                    <div className="h-20">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: -18 }}>
+                          <XAxis dataKey="hour" tick={{ fontSize: 8, fill: "#a1a1aa" }} tickLine={false} axisLine={false} />
+                          <YAxis tick={{ fontSize: 8, fill: "#a1a1aa" }} tickLine={false} axisLine={false} tickFormatter={v => `${v}%`} domain={["auto", "auto"]} />
+                          <Tooltip
+                            contentStyle={{ backgroundColor: "rgb(24 24 27)", border: "1px solid rgb(63 63 70)", borderRadius: 8, fontSize: 11, color: "#e4e4e7" }}
+                            labelStyle={{ color: "#a1a1aa", marginBottom: 2 }}
+                            formatter={(v) => [`${v}%`, lang === "es" ? "Cierre" : "Close %"]}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="rate"
+                            stroke="#f87171"
+                            strokeWidth={1.5}
+                            dot={false}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Section C: Schedule Adherence */}
+      {loginPatterns && loginPatterns.length > 0 && (() => {
+        const sorted = [...loginPatterns].sort((a, b) => a.adherence_score - b.adherence_score);
+
+        const loginColor = (delta: number) =>
+          delta > 5 ? "text-red-600 dark:text-red-400" : delta > 2 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-300";
+        const loginLabel = (delta: number) =>
+          delta > 0 ? `+${delta.toFixed(0)}m ${lang === "es" ? "tarde" : "late"}` : `${Math.abs(delta).toFixed(0)}m ${lang === "es" ? "antes" : "early"}`;
+
+        const logoutColor = (delta: number) =>
+          delta < -10 ? "text-red-600 dark:text-red-400" : delta < -5 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-300";
+        const logoutLabel = (delta: number) =>
+          delta < 0 ? `-${Math.abs(delta).toFixed(0)}m ${lang === "es" ? "antes" : "early"}` : `+${delta.toFixed(0)}m OT`;
+
+        const breakColor = (avg: number, target: number) =>
+          Math.abs(avg - target) > 5 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-300";
+
+        const scoreColor = (score: number) =>
+          score >= 85 ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+          : score >= 70 ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+          : "bg-red-500/15 text-red-700 dark:text-red-300 border-red-500/30";
+
+        return (
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 shadow-sm dark:shadow-none space-y-3">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {lang === "es" ? "Puntualidad y presencia" : "Schedule Adherence"}
+            </h3>
+            <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
+              <div className="overflow-x-auto no-scrollbar">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-zinc-200 dark:border-zinc-800 text-[10px] uppercase tracking-wider text-zinc-500">
+                      <th className="px-3 py-2.5 text-left">{lang === "es" ? "Agente" : "Agent"}</th>
+                      <th className="px-3 py-2.5 text-right">{lang === "es" ? "Entrada" : "Login"}</th>
+                      <th className="px-3 py-2.5 text-right">{lang === "es" ? "Salida" : "Logout"}</th>
+                      <th className="px-3 py-2.5 text-right">{lang === "es" ? "Descanso" : "Break"}</th>
+                      <th className="px-3 py-2.5 text-right">{lang === "es" ? "Puntualidad" : "Score"}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+                    {sorted.map(p => (
+                      <tr key={p.user} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                        <td className="px-3 py-2.5 font-medium text-zinc-800 dark:text-zinc-200">{p.full_name}</td>
+                        <td className={`px-3 py-2.5 text-right tabular-nums font-mono ${loginColor(p.avg_login_delta_min)}`}>
+                          {loginLabel(p.avg_login_delta_min)}
+                        </td>
+                        <td className={`px-3 py-2.5 text-right tabular-nums font-mono ${logoutColor(p.avg_logout_delta_min)}`}>
+                          {logoutLabel(p.avg_logout_delta_min)}
+                        </td>
+                        <td className={`px-3 py-2.5 text-right tabular-nums font-mono ${breakColor(p.avg_break_min, p.break_target_min)}`}>
+                          {p.avg_break_min.toFixed(0)}m
+                        </td>
+                        <td className="px-3 py-2.5 text-right">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-[11px] font-semibold tabular-nums ${scoreColor(p.adherence_score)}`}>
+                            {p.adherence_score}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </section>
   );
 }

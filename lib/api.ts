@@ -183,6 +183,142 @@ export type SalesDay = { date: string; sales: number; calls?: number };
 export type WeeklyInsight = { lang: "es" | "en"; summary: string; top_leads_count: number };
 export type Campaign = { campaign_id: string; campaign_name: string; active: string };
 
+// ── Full-suite types (generated from mock-data.ts; Railway endpoints TBD) ─────
+
+export type DayHourCell = {
+  day: number;          // 0=Mon … 6=Sun
+  hour: number;         // 8–20 working hours
+  calls: number;
+  contacts: number;     // answered calls
+  contact_rate: number;
+  sales: number;
+};
+
+export type HourlyContact = {
+  hour: number;
+  calls: number;
+  contacts: number;
+  contact_rate: number;
+  sales: number;
+};
+
+export type AgentHourlyPerf = {
+  user: string;
+  full_name: string;
+  hourly: { hour_of_shift: number; close_rate: number; calls: number }[];
+  fatigue_detected: boolean;
+  avg_close_first_half: number;
+  avg_close_second_half: number;
+};
+
+export type AgentDispositionBreakdown = {
+  user: string;
+  full_name: string;
+  dispositions: {
+    dispo: string;
+    label_en: string;
+    label_es: string;
+    count: number;
+    pct: number;
+    color: "emerald" | "red" | "amber" | "violet" | "zinc";
+  }[];
+  dnc_pct: number;
+  sale_pct: number;
+  callback_pct: number;
+  not_interested_pct: number;
+  flags: string[];
+};
+
+export type LoginPattern = {
+  user: string;
+  full_name: string;
+  avg_login_delta_min: number;   // positive = late, negative = early
+  avg_logout_delta_min: number;  // negative = left early
+  avg_break_min: number;
+  break_target_min: number;
+  adherence_score: number;       // 0–100
+};
+
+export type CampaignHealth = {
+  campaign_id: string;
+  campaign_name: string;
+  contact_rate: number;
+  abandon_rate: number;          // % answered but dropped before agent connects
+  drop_rate: number;             // predictive dialer drop % (FTC limit 3%)
+  penetration_rate: number;
+  leads_remaining_pct: number;
+  lead_age_avg_days: number;
+  fresh_lead_pct: number;        // % leads < 24h old
+  recycled_call_pct: number;     // % dials that are 3rd+ attempt
+  best_attempt: number;          // attempt number with best conversion
+  conversion_rate: number;
+  cost_per_sale_usd: number;
+  active_agents: number;
+  health_score: number;          // 0–100
+  health_status: "healthy" | "warning" | "critical";
+  flags: string[];
+};
+
+export type AttemptROI = {
+  attempt: number;               // 1, 2, 3, 4, 5, 6+
+  calls: number;
+  contacts: number;
+  sales: number;
+  contact_rate: number;
+  conversion_rate: number;
+  value: "strong" | "ok" | "diminishing" | "stop";
+};
+
+export type CallbackStats = {
+  total_scheduled: number;
+  show_rate: number;
+  convert_rate: number;
+  by_agent: {
+    user: string;
+    full_name: string;
+    set: number;
+    showed: number;
+    converted: number;
+    show_rate: number;
+    convert_rate: number;
+  }[];
+};
+
+export type StaffingHour = {
+  hour: number;
+  agents_logged_in: number;
+  call_volume: number;
+  coverage_status: "understaffed" | "optimal" | "overstaffed";
+};
+
+export type DayOfWeekPerf = {
+  day: number;           // 0=Mon, 6=Sun
+  day_name_en: string;
+  day_name_es: string;
+  calls: number;
+  sales: number;
+  contact_rate: number;
+  close_rate: number;
+};
+
+export type DialerHealth = {
+  drop_rate: number;
+  drop_status: "ok" | "warning" | "critical";
+  total_dropped: number;
+  lines_per_agent: number;
+};
+
+export type PaceToTarget = {
+  target_today: number;
+  actual_so_far: number;
+  current_pace: number;          // sales/hour so far
+  required_pace: number;         // needed to hit target
+  projected_eod: number;
+  on_track: boolean;
+  hours_elapsed: number;
+  hours_remaining: number;
+};
+
 export type Health = {
   status: string;
   mock_mode: boolean;

@@ -3,11 +3,16 @@ import type {
   Health, WeeklyInsight, PipelineForecast, ContactVelocity,
 } from "@/lib/api";
 import Dashboard from "@/app/components/Dashboard";
+import {
+  mockDayHourHeatmap, mockHourlyContact, mockAgentHourlyPerf, mockAgentDispositions,
+  mockLoginPatterns, mockCampaignHealth, mockAttemptROI, mockCallbackStats,
+  mockStaffingHours, mockDayOfWeekPerf, mockDialerHealth, mockPaceToTarget,
+} from "@/lib/mock-data";
 
 type SearchParams = Promise<{ range?: string; startDate?: string; endDate?: string }>;
 type RangeType = "today" | 7 | 30 | 90 | "custom";
 
-// ---------- Safe fallbacks (one per api call) ---------------------------------
+// ---------- Safe fallbacks ----------------------------------------------------
 
 const FALLBACK_HEALTH: Health = {
   status: "unavailable",
@@ -19,11 +24,7 @@ const FALLBACK_HEALTH: Health = {
   dispo_callback: "CBCK",
 };
 
-const FALLBACK_WEEKLY: WeeklyInsight = {
-  lang: "es",
-  summary: "",
-  top_leads_count: 0,
-};
+const FALLBACK_WEEKLY: WeeklyInsight = { lang: "es", summary: "", top_leads_count: 0 };
 
 const FALLBACK_FORECAST: PipelineForecast = {
   callbacks_scheduled_next_7d: 0,
@@ -46,7 +47,7 @@ const FALLBACK_VELOCITY: ContactVelocity = {
   alert: false,
 };
 
-// ---------- Unwrap helper ----------------------------------------------------
+// ---------- Unwrap helper -----------------------------------------------------
 
 function ok<T>(result: PromiseSettledResult<T>, fallback: T): T {
   if (result.status === "fulfilled") return result.value;
@@ -54,7 +55,7 @@ function ok<T>(result: PromiseSettledResult<T>, fallback: T): T {
   return fallback;
 }
 
-// ---------- Page -------------------------------------------------------------
+// ---------- Page --------------------------------------------------------------
 
 export default async function HomePage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
@@ -67,22 +68,22 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
     rangeLabel = "today";
   } else if (params.startDate && params.endDate) {
     const start = new Date(params.startDate);
-    const end = new Date(params.endDate);
-    daysBack = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-    rangeLabel = "custom";
+    const end   = new Date(params.endDate);
+    daysBack    = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    rangeLabel  = "custom";
   } else {
     const raw = parseInt(params.range || "30", 10);
-    daysBack = raw === 7 || raw === 90 ? raw : 30;
+    daysBack   = raw === 7 || raw === 90 ? raw : 30;
     rangeLabel = daysBack as 7 | 30 | 90;
   }
-  const range = daysBack;
+  const range       = daysBack;
   const momentumDays = rangeLabel === "today" ? 7 : range;
 
-  // Fire all 15 calls in parallel; never let one failure kill the page.
-  // momentum90 is always 13 weekly points regardless of selected range.
+  // Fire all API calls in parallel — never let one failure kill the page
   const [
     rHealth, rLeads, rAgents, rDispos, rCallTimes, rSales,
-    rWeekly, rCampaigns, rMomentum, rMomentum90, rSources, rForecast, rVelocity, rAlerts, rMatrix,
+    rWeekly, rCampaigns, rMomentum, rMomentum90, rSources,
+    rForecast, rVelocity, rAlerts, rMatrix,
   ] = await Promise.allSettled([
     api.health(),
     api.leads(100, range),
@@ -93,7 +94,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
     api.weekly("es"),
     api.campaignPerformance(range),
     api.agentMomentum(momentumDays),
-    api.agentMomentum(91),          // 13-week history for the 90d toggle
+    api.agentMomentum(91),
     api.leadSources(range),
     api.forecast(),
     api.contactVelocity(7),
@@ -101,21 +102,38 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
     api.agentCampaignMatrix(range),
   ]);
 
-  const health    = ok(rHealth,    FALLBACK_HEALTH);
-  const leadsRes  = ok(rLeads,     { count: 0, returned: 0, leads: [] });
-  const agentsRes = ok(rAgents,    { agents: [] });
-  const disposRes = ok(rDispos,    { dispositions: [] });
+  const health       = ok(rHealth,    FALLBACK_HEALTH);
+  const leadsRes     = ok(rLeads,     { count: 0, returned: 0, leads: [] });
+  const agentsRes    = ok(rAgents,    { agents: [] });
+  const disposRes    = ok(rDispos,    { dispositions: [] });
   const callTimesRes = ok(rCallTimes, { hours: [] });
-  const salesRes  = ok(rSales,     { days: [] });
-  const weekly    = ok(rWeekly,    FALLBACK_WEEKLY);
+  const salesRes     = ok(rSales,     { days: [] });
+  const weekly       = ok(rWeekly,    FALLBACK_WEEKLY);
   const campaignsRes = ok(rCampaigns, { campaigns: [] });
-  const momentumRes   = ok(rMomentum,   { agents: [] });
+  const momentumRes  = ok(rMomentum,  { agents: [] });
   const momentum90Res = ok(rMomentum90, { agents: [] });
   const sourcesRes   = ok(rSources,   { sources: [] });
-  const forecast  = ok(rForecast,  FALLBACK_FORECAST);
-  const velocity  = ok(rVelocity,  FALLBACK_VELOCITY);
-  const alertsRes = ok(rAlerts,    { lang: "es", count: 0, alerts: [] });
-  const matrixRes = ok(rMatrix,    { matrix: [] });
+  const forecast     = ok(rForecast,  FALLBACK_FORECAST);
+  const velocity     = ok(rVelocity,  FALLBACK_VELOCITY);
+  const alertsRes    = ok(rAlerts,    { lang: "es", count: 0, alerts: [] });
+  const matrixRes    = ok(rMatrix,    { matrix: [] });
+
+  // ── Generate mock data for new full-suite sections (Railway endpoints TBD) ──
+  const agentsList   = agentsRes.agents;
+  const campsList    = campaignsRes.campaigns;
+
+  const dayHourHeatmap    = mockDayHourHeatmap();
+  const hourlyContact     = mockHourlyContact();
+  const agentHourlyPerf   = mockAgentHourlyPerf(agentsList);
+  const agentDispositions = mockAgentDispositions(agentsList);
+  const loginPatterns     = mockLoginPatterns(agentsList);
+  const campaignHealth    = mockCampaignHealth(campsList);
+  const attemptROI        = mockAttemptROI();
+  const callbackStats     = mockCallbackStats(agentsList);
+  const staffingHours     = mockStaffingHours(agentsList);
+  const dayOfWeekPerf     = mockDayOfWeekPerf();
+  const dialerHealth      = mockDialerHealth();
+  const paceToTarget      = mockPaceToTarget(agentsList);
 
   return (
     <Dashboard
@@ -139,6 +157,19 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
       velocity={velocity}
       alerts={alertsRes.alerts}
       matrix={matrixRes.matrix}
+      // New full-suite data
+      dayHourHeatmap={dayHourHeatmap}
+      hourlyContact={hourlyContact}
+      agentHourlyPerf={agentHourlyPerf}
+      agentDispositions={agentDispositions}
+      loginPatterns={loginPatterns}
+      campaignHealth={campaignHealth}
+      attemptROI={attemptROI}
+      callbackStats={callbackStats}
+      staffingHours={staffingHours}
+      dayOfWeekPerf={dayOfWeekPerf}
+      dialerHealth={dialerHealth}
+      paceToTarget={paceToTarget}
     />
   );
 }

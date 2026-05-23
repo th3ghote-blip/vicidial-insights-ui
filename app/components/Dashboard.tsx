@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
-  Users, BarChart3, Sparkles, Target, LineChart,
+  Users, BarChart3, Sparkles, Target, Activity,
   Database, Cpu, Server, Sun, Moon, Loader2, MessageSquare, Settings2,
 } from "lucide-react";
 import { loadTargets, type Targets } from "@/lib/targets";
@@ -11,14 +11,15 @@ import TargetsPanel from "./TargetsPanel";
 import type {
   Lead, AgentStat, Disposition, CallHour, SalesDay, WeeklyInsight, Health, CampaignStat,
   AgentMomentum, SourceROI, PipelineForecast, ContactVelocity, Alert, AgentCampaignCell,
+  DayHourCell, HourlyContact, AgentHourlyPerf, AgentDispositionBreakdown, LoginPattern,
+  CampaignHealth, AttemptROI, CallbackStats, StaffingHour, DayOfWeekPerf, DialerHealth, PaceToTarget,
 } from "@/lib/api";
 import { t, type Lang } from "@/lib/i18n";
-import AiBanner from "./AiBanner";
-import SummaryTab from "./SummaryTab";
+import CommandTab from "./CommandTab";
 import LeadsTab from "./LeadsTab";
 import AgentsTab from "./AgentsTab";
 import MomentumTab from "./MomentumTab";
-import InsightsTab from "./InsightsTab";
+import CampaignTab from "./CampaignTab";
 import ChatTab from "./ChatTab";
 
 type Props = {
@@ -42,45 +43,59 @@ type Props = {
   velocity: ContactVelocity;
   alerts: Alert[];
   matrix: AgentCampaignCell[];
+  // Full-suite additions
+  dayHourHeatmap: DayHourCell[];
+  hourlyContact: HourlyContact[];
+  agentHourlyPerf: AgentHourlyPerf[];
+  agentDispositions: AgentDispositionBreakdown[];
+  loginPatterns: LoginPattern[];
+  campaignHealth: CampaignHealth[];
+  attemptROI: AttemptROI[];
+  callbackStats: CallbackStats;
+  staffingHours: StaffingHour[];
+  dayOfWeekPerf: DayOfWeekPerf[];
+  dialerHealth: DialerHealth;
+  paceToTarget: PaceToTarget;
 };
 
-type TabKey = "summary" | "analytics" | "agents" | "momentum" | "chat" | "leads";
+type TabKey = "command" | "agents" | "campaigns" | "leads" | "momentum" | "chat";
 type Theme = "light" | "dark";
 
+const VALID_TABS: TabKey[] = ["command", "agents", "campaigns", "leads", "momentum", "chat"];
+
 const NAV = [
-  { key: "summary"   as const, icon: BarChart3,     labelEs: "Resumen",   labelEn: "Summary"   },
-  { key: "analytics" as const, icon: LineChart,     labelEs: "Análisis",  labelEn: "Analytics" },
-  { key: "agents"    as const, icon: Users,         labelEs: "Agentes",   labelEn: "Agents"    },
-  { key: "momentum"  as const, icon: Sparkles,      labelEs: "Momentum",  labelEn: "Momentum"  },
-  { key: "chat"      as const, icon: MessageSquare, labelEs: "Chat IA",   labelEn: "AI Chat"   },
-  { key: "leads"     as const, icon: Target,        labelEs: "Leads",     labelEn: "Leads"     },
+  { key: "command"   as const, icon: Activity,      labelEs: "Comando",   labelEn: "Command"   },
+  { key: "agents"    as const, icon: Users,          labelEs: "Agentes",   labelEn: "Agents"    },
+  { key: "campaigns" as const, icon: BarChart3,      labelEs: "Campañas",  labelEn: "Campaigns" },
+  { key: "leads"     as const, icon: Target,         labelEs: "Leads",     labelEn: "Leads"     },
+  { key: "momentum"  as const, icon: Sparkles,       labelEs: "Momentum",  labelEn: "Momentum"  },
+  { key: "chat"      as const, icon: MessageSquare,  labelEs: "Chat IA",   labelEn: "AI Chat"   },
 ];
 
 export default function Dashboard(props: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const router       = useRouter();
+  const pathname     = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
   const [lang, setLang] = useState<Lang>(props.initialLang);
   const [tab, setTabState] = useState<TabKey>(() => {
-    const tabParam = searchParams.get("tab") as TabKey | null;
-    return tabParam && ["summary", "analytics", "agents", "momentum", "chat", "leads"].includes(tabParam) ? tabParam : "summary";
+    const p = searchParams.get("tab") as TabKey | null;
+    return p && VALID_TABS.includes(p) ? p : "command";
   });
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window === "undefined") return "dark";
     return (localStorage.getItem("theme") as Theme) || "dark";
   });
   const [showCustomDate, setShowCustomDate] = useState(false);
-  const [customStart, setCustomStart] = useState(props.initialStartDate || "");
-  const [customEnd, setCustomEnd] = useState(props.initialEndDate || "");
-  const [showTargets, setShowTargets] = useState(false);
-  const [targets, setTargets] = useState<Targets>(() => loadTargets());
+  const [customStart, setCustomStart]       = useState(props.initialStartDate || "");
+  const [customEnd, setCustomEnd]           = useState(props.initialEndDate || "");
+  const [showTargets, setShowTargets]       = useState(false);
+  const [targets, setTargets]               = useState<Targets>(() => loadTargets());
   const tr = t[lang];
   const urgentCount = props.alerts.filter(a => a.severity === "high").length;
-  void urgentCount; // available for future badge use
+  void urgentCount;
 
-  // Apply theme class on mount and when theme changes
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
@@ -118,7 +133,7 @@ export default function Dashboard(props: Props) {
 
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex">
-      {/* ────────── Sidebar ────────── */}
+      {/* ── Sidebar ── */}
       <aside className="hidden md:flex md:flex-col w-60 border-r border-zinc-200 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-950 sticky top-0 h-screen">
         <div className="px-5 pt-5 pb-6 border-b border-zinc-200 dark:border-zinc-800/60">
           <div className="flex items-center gap-2.5">
@@ -134,7 +149,7 @@ export default function Dashboard(props: Props) {
 
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           {NAV.map(n => {
-            const Icon = n.icon;
+            const Icon   = n.icon;
             const active = tab === n.key;
             return (
               <button
@@ -151,7 +166,7 @@ export default function Dashboard(props: Props) {
                 )}
                 <Icon className={`h-4 w-4 ${active ? "text-emerald-500 dark:text-emerald-400" : "text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300"}`} strokeWidth={2} />
                 <span className="flex-1 text-left">{lang === "es" ? n.labelEs : n.labelEn}</span>
-                {n.key === "summary" && urgentCount > 0 && (
+                {n.key === "command" && urgentCount > 0 && (
                   <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-red-500/15 text-red-600 dark:text-red-300 border border-red-500/30">
                     {urgentCount}
                   </span>
@@ -165,19 +180,13 @@ export default function Dashboard(props: Props) {
           <div className="text-[10px] uppercase tracking-wider text-zinc-600 dark:text-zinc-500 font-semibold mb-1">
             {lang === "es" ? "Sistema" : "System"}
           </div>
-          <HealthRow icon={Server} label={lang === "es" ? "Backend" : "Backend"}
-            value={props.health.mock_mode ? "mock" : "live"}
-            ok={!props.health.mock_mode} warn={props.health.mock_mode} />
-          <HealthRow icon={Cpu} label="LLM"
-            value={props.health.anthropic_configured ? "Haiku" : "off"}
-            ok={props.health.anthropic_configured} />
-          <HealthRow icon={Database} label="Cache"
-            value={props.health.supabase_configured ? "Supabase" : "—"}
-            ok={props.health.supabase_configured} />
+          <HealthRow icon={Server}   label="Backend" value={props.health.mock_mode ? "mock" : "live"} ok={!props.health.mock_mode} warn={props.health.mock_mode} />
+          <HealthRow icon={Cpu}      label="LLM"     value={props.health.anthropic_configured ? "Haiku" : "off"} ok={props.health.anthropic_configured} />
+          <HealthRow icon={Database} label="Cache"   value={props.health.supabase_configured ? "Supabase" : "—"} ok={props.health.supabase_configured} />
         </div>
       </aside>
 
-      {/* ────────── Main ────────── */}
+      {/* ── Main ── */}
       <div className="flex-1 min-w-0">
         <header className="border-b border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/90 dark:bg-zinc-950/70 backdrop-blur-xl sticky top-0 z-20">
           <div className="px-4 sm:px-6 py-3 flex items-center gap-2 sm:gap-4">
@@ -187,12 +196,12 @@ export default function Dashboard(props: Props) {
             </div>
 
             <h1 className="hidden md:flex text-base font-medium text-zinc-700 dark:text-zinc-200 items-center gap-2">
-              {tab === "summary"   && <><BarChart3 className="h-4 w-4 text-zinc-500"/>     {lang === "es" ? "Resumen"  : "Summary"  }</>}
-              {tab === "analytics" && <><LineChart className="h-4 w-4 text-zinc-500"/>     {lang === "es" ? "Análisis" : "Analytics"}</>}
-              {tab === "agents"    && <><Users className="h-4 w-4 text-zinc-500"/>         {lang === "es" ? "Agentes"  : "Agents"   }</>}
-              {tab === "momentum"  && <><Sparkles className="h-4 w-4 text-zinc-500"/>      {lang === "es" ? "Momentum" : "Momentum" }</>}
-              {tab === "chat"      && <><MessageSquare className="h-4 w-4 text-zinc-500"/> {lang === "es" ? "Chat IA"  : "AI Chat"  }</>}
-              {tab === "leads"     && <><Target className="h-4 w-4 text-zinc-500"/>        {lang === "es" ? "Leads"    : "Leads"    }</>}
+              {tab === "command"   && <><Activity      className="h-4 w-4 text-zinc-500" /> {lang === "es" ? "Comando"  : "Command"  }</>}
+              {tab === "agents"    && <><Users          className="h-4 w-4 text-zinc-500" /> {lang === "es" ? "Agentes"  : "Agents"   }</>}
+              {tab === "campaigns" && <><BarChart3      className="h-4 w-4 text-zinc-500" /> {lang === "es" ? "Campañas" : "Campaigns"}</>}
+              {tab === "leads"     && <><Target         className="h-4 w-4 text-zinc-500" /> {lang === "es" ? "Leads"    : "Leads"    }</>}
+              {tab === "momentum"  && <><Sparkles       className="h-4 w-4 text-zinc-500" /> {lang === "es" ? "Momentum" : "Momentum" }</>}
+              {tab === "chat"      && <><MessageSquare  className="h-4 w-4 text-zinc-500" /> {lang === "es" ? "Chat IA"  : "AI Chat"  }</>}
             </h1>
 
             <span className={`hidden sm:inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full border font-medium ${
@@ -206,42 +215,20 @@ export default function Dashboard(props: Props) {
 
             <div className="flex-1" />
 
-            {/* Time range — wired to URL */}
+            {/* Time range */}
             <div className="hidden sm:flex border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden text-xs bg-white dark:bg-zinc-900/60 relative">
-              <button
-                onClick={() => setRange("today")}
-                disabled={isPending}
-                className={`px-2.5 py-1.5 transition-colors disabled:opacity-50 ${
-                  props.initialRangeLabel === "today"
-                    ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white"
-                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-                }`}
-              >
+              <button onClick={() => setRange("today")} disabled={isPending}
+                className={`px-2.5 py-1.5 transition-colors disabled:opacity-50 ${props.initialRangeLabel === "today" ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"}`}>
                 Today
               </button>
               {([7, 30, 90] as const).map(r => (
-                <button
-                  key={r}
-                  onClick={() => setRange(r)}
-                  disabled={isPending}
-                  className={`px-3 py-1.5 transition-colors disabled:opacity-50 ${
-                    props.initialRangeLabel === r
-                      ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white"
-                      : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-                  }`}
-                >
+                <button key={r} onClick={() => setRange(r)} disabled={isPending}
+                  className={`px-3 py-1.5 transition-colors disabled:opacity-50 ${props.initialRangeLabel === r ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"}`}>
                   {r}d
                 </button>
               ))}
-              <button
-                onClick={() => setShowCustomDate(!showCustomDate)}
-                disabled={isPending}
-                className={`px-2.5 py-1.5 transition-colors disabled:opacity-50 ${
-                  props.initialRangeLabel === "custom"
-                    ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white"
-                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-                }`}
-              >
+              <button onClick={() => setShowCustomDate(!showCustomDate)} disabled={isPending}
+                className={`px-2.5 py-1.5 transition-colors disabled:opacity-50 ${props.initialRangeLabel === "custom" ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"}`}>
                 Custom
               </button>
               {isPending && (
@@ -251,7 +238,6 @@ export default function Dashboard(props: Props) {
               )}
             </div>
 
-
             {/* Language toggle */}
             <div className="flex border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden text-xs bg-white dark:bg-zinc-900/60">
               <button onClick={() => setLang("es")} className={`px-2.5 py-1.5 transition-colors ${lang === "es" ? "bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-white" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"}`}>ES</button>
@@ -259,24 +245,19 @@ export default function Dashboard(props: Props) {
             </div>
 
             {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
+            <button onClick={toggleTheme}
               className="h-8 w-8 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-colors"
-              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            >
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
 
             {/* KPI targets */}
-            <button
-              onClick={() => setShowTargets(true)}
-              title={lang === "es" ? "Objetivos KPI" : "KPI Targets"}
+            <button onClick={() => setShowTargets(true)} title={lang === "es" ? "Objetivos KPI" : "KPI Targets"}
               className={`relative h-8 w-8 rounded-lg border flex items-center justify-center transition-colors ${
                 Object.values(targets).some(v => v !== null)
                   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                   : "border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
-              }`}
-            >
+              }`}>
               <Settings2 className="h-4 w-4" strokeWidth={2} />
               {Object.values(targets).some(v => v !== null) && (
                 <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-950" />
@@ -284,9 +265,10 @@ export default function Dashboard(props: Props) {
             </button>
           </div>
 
-          <nav className="md:hidden px-4 flex gap-1 border-t border-zinc-200 dark:border-zinc-900 overflow-x-auto">
+          {/* Mobile nav */}
+          <nav className="md:hidden px-4 flex gap-1 border-t border-zinc-200 dark:border-zinc-900 overflow-x-auto no-scrollbar">
             {NAV.map(n => {
-              const Icon = n.icon;
+              const Icon   = n.icon;
               const active = tab === n.key;
               return (
                 <button key={n.key} onClick={() => setTab(n.key)}
@@ -295,9 +277,6 @@ export default function Dashboard(props: Props) {
                   }`}>
                   <Icon className="h-4 w-4" strokeWidth={2} />
                   <span>{lang === "es" ? n.labelEs : n.labelEn}</span>
-                  {n.key === "summary" && urgentCount > 0 && (
-                    <span className="text-[10px] font-mono px-1.5 py-px rounded bg-red-500/15 text-red-600 dark:text-red-300">{urgentCount}</span>
-                  )}
                 </button>
               );
             })}
@@ -305,30 +284,75 @@ export default function Dashboard(props: Props) {
         </header>
 
         <main className="px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6 max-w-7xl mx-auto">
-          {tab === "summary"   && <SummaryTab lang={lang} salesTrend={props.salesTrend} callTimes={props.callTimes} campaigns={props.campaigns} agents={props.agents} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} weekly={props.weekly} momentum={props.momentum} targets={targets} forecast={props.forecast} />}
-          {tab === "leads"     && <LeadsTab lang={lang} leads={props.leads} range={props.initialRange} rangeLabel={props.initialRangeLabel ?? 30} />}
-          {tab === "agents"    && <AgentsTab lang={lang} agents={props.agents} momentum={props.momentum} range={props.initialRange} targets={targets} />}
-          {tab === "momentum"  && <MomentumTab lang={lang} agents={props.agents} momentum={props.momentum} momentum90={props.momentum90} callTimes={props.callTimes} salesTrend={props.salesTrend} />}
-          {tab === "chat"      && <ChatTab lang={lang} />}
-          {tab === "analytics" && (
-            <InsightsTab
+
+          {tab === "command" && (
+            <CommandTab
               lang={lang}
-              weekly={props.weekly}
-              dispos={props.dispos}
+              agents={props.agents}
+              leads={props.leads}
               callTimes={props.callTimes}
               salesTrend={props.salesTrend}
-              campaigns={props.campaigns}
-              sources={props.sources}
-              forecast={props.forecast}
-              velocity={props.velocity}
-              matrix={props.matrix}
-              range={props.initialRange}
+              hourlyContact={props.hourlyContact}
+              dayHourHeatmap={props.dayHourHeatmap}
+              staffingHours={props.staffingHours}
+              dayOfWeekPerf={props.dayOfWeekPerf}
+              dialerHealth={props.dialerHealth}
+              paceToTarget={props.paceToTarget}
             />
           )}
+
+          {tab === "agents" && (
+            <AgentsTab
+              lang={lang}
+              agents={props.agents}
+              momentum={props.momentum}
+              range={props.initialRange}
+              targets={targets}
+              agentHourlyPerf={props.agentHourlyPerf}
+              agentDispositions={props.agentDispositions}
+              loginPatterns={props.loginPatterns}
+            />
+          )}
+
+          {tab === "campaigns" && (
+            <CampaignTab
+              lang={lang}
+              campaignHealth={props.campaignHealth}
+              attemptROI={props.attemptROI}
+              callbackStats={props.callbackStats}
+              matrix={props.matrix}
+              agents={props.agents}
+            />
+          )}
+
+          {tab === "leads" && (
+            <LeadsTab
+              lang={lang}
+              leads={props.leads}
+              range={props.initialRange}
+              rangeLabel={props.initialRangeLabel ?? 30}
+              attemptROI={props.attemptROI}
+              callbackStats={props.callbackStats}
+            />
+          )}
+
+          {tab === "momentum" && (
+            <MomentumTab
+              lang={lang}
+              agents={props.agents}
+              momentum={props.momentum}
+              momentum90={props.momentum90}
+              callTimes={props.callTimes}
+              salesTrend={props.salesTrend}
+              dayOfWeekPerf={props.dayOfWeekPerf}
+            />
+          )}
+
+          {tab === "chat" && <ChatTab lang={lang} />}
+
         </main>
       </div>
 
-      {/* KPI targets slide-in panel */}
       <TargetsPanel
         open={showTargets}
         onClose={() => setShowTargets(false)}
@@ -337,22 +361,21 @@ export default function Dashboard(props: Props) {
         lang={lang}
       />
 
-      {/* Custom date range modal — rendered at root to escape sticky header stacking context */}
       {showCustomDate && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowCustomDate(false)}>
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-2xl w-80" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-6 shadow-2xl w-80" onClick={e => e.stopPropagation()}>
             <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-4">
               {lang === "es" ? "Rango personalizado" : "Custom date range"}
             </h3>
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-zinc-600 dark:text-zinc-400 block mb-1">{lang === "es" ? "Desde" : "From"}</label>
-                <input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)}
+                <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white" />
               </div>
               <div>
                 <label className="text-xs text-zinc-600 dark:text-zinc-400 block mb-1">{lang === "es" ? "Hasta" : "To"}</label>
-                <input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)}
+                <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white" />
               </div>
               <div className="flex gap-2 pt-2">

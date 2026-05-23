@@ -10,7 +10,7 @@ import {
   Phone, Clock, RefreshCw, Zap, Coffee, Timer, Gauge,
   AlertTriangle, ChevronDown, ChevronUp,
 } from "lucide-react";
-import type { AgentStat, AgentMomentum, CallHour, SalesDay } from "@/lib/api";
+import type { AgentStat, AgentMomentum, CallHour, SalesDay, DayOfWeekPerf } from "@/lib/api";
 import type { Lang } from "@/lib/i18n";
 
 // ── Fatigue flag labels ───────────────────────────────────────────────────────
@@ -449,13 +449,14 @@ function MomStat({ label, value, sub, color = "zinc" }: { label: string; value: 
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function MomentumTab({ lang, agents, momentum, momentum90, callTimes, salesTrend }: {
+export default function MomentumTab({ lang, agents, momentum, momentum90, callTimes, salesTrend, dayOfWeekPerf }: {
   lang: Lang;
   agents: AgentStat[];
   momentum: AgentMomentum[];        // current range (e.g. 28d → 4 weeks)
   momentum90: AgentMomentum[];      // always 13-week history
   callTimes: CallHour[];
   salesTrend: SalesDay[];
+  dayOfWeekPerf?: DayOfWeekPerf[];
 }) {
   const [view, setView] = useState<"4w" | "90d">("4w");
 
@@ -567,6 +568,83 @@ export default function MomentumTab({ lang, agents, momentum, momentum90, callTi
           ))}
         </Column>
       </div>
+      {/* Day of Week Performance */}
+      {dayOfWeekPerf && dayOfWeekPerf.length > 0 && (() => {
+        const withCalls = dayOfWeekPerf.filter(d => d.calls > 0);
+        const bestDay = withCalls.length > 0
+          ? withCalls.reduce((best, cur) => cur.sales > best.sales ? cur : best, withCalls[0])
+          : null;
+        const worstDay = withCalls.length > 0
+          ? withCalls.reduce((worst, cur) => cur.close_rate < worst.close_rate ? cur : worst, withCalls[0])
+          : null;
+
+        const contactColor = (rate: number) =>
+          rate > 35 ? "text-emerald-600 dark:text-emerald-300" : rate > 25 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400";
+        const closeColor = (rate: number) =>
+          rate > 15 ? "text-emerald-600 dark:text-emerald-300" : rate > 10 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400";
+
+        const bestDayName = bestDay ? (lang === "es" ? bestDay.day_name_es : bestDay.day_name_en) : "";
+
+        return (
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 shadow-sm dark:shadow-none space-y-3">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {lang === "es" ? "Rendimiento por día de la semana" : "Performance by Day of Week"}
+            </h3>
+            <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
+              <div className="overflow-x-auto no-scrollbar">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-zinc-200 dark:border-zinc-800 text-[10px] uppercase tracking-wider text-zinc-500">
+                      <th className="px-3 py-2.5 text-left">{lang === "es" ? "Día" : "Day"}</th>
+                      <th className="px-3 py-2.5 text-right">{lang === "es" ? "Llamadas" : "Calls"}</th>
+                      <th className="px-3 py-2.5 text-right">{lang === "es" ? "Ventas" : "Sales"}</th>
+                      <th className="px-3 py-2.5 text-right">{lang === "es" ? "Contacto%" : "Contact%"}</th>
+                      <th className="px-3 py-2.5 text-right">{lang === "es" ? "Cierre%" : "Close%"}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+                    {dayOfWeekPerf.map(d => {
+                      const isBest  = bestDay?.day === d.day;
+                      const isWorst = worstDay?.day === d.day && d.calls > 0 && !isBest;
+                      const rowBg = isBest
+                        ? "bg-emerald-50 dark:bg-emerald-900/10"
+                        : isWorst
+                        ? "bg-red-50 dark:bg-red-900/5"
+                        : "hover:bg-zinc-50 dark:hover:bg-zinc-900/50";
+                      const contactPct = d.contact_rate * 100;
+                      const closePct   = d.close_rate * 100;
+                      return (
+                        <tr key={d.day} className={`transition-colors ${rowBg}`}>
+                          <td className={`px-3 py-2.5 font-medium ${isBest ? "text-emerald-700 dark:text-emerald-300 font-semibold" : "text-zinc-800 dark:text-zinc-200"}`}>
+                            {lang === "es" ? d.day_name_es : d.day_name_en}
+                          </td>
+                          <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-300">{d.calls.toLocaleString()}</td>
+                          <td className={`px-3 py-2.5 text-right tabular-nums font-semibold ${isBest ? "text-emerald-600 dark:text-emerald-300" : "text-zinc-700 dark:text-zinc-300"}`}>
+                            {d.sales.toLocaleString()}
+                          </td>
+                          <td className={`px-3 py-2.5 text-right tabular-nums font-mono ${d.calls > 0 ? contactColor(contactPct) : "text-zinc-400"}`}>
+                            {d.calls > 0 ? `${contactPct.toFixed(1)}%` : "—"}
+                          </td>
+                          <td className={`px-3 py-2.5 text-right tabular-nums font-mono ${d.calls > 0 ? closeColor(closePct) : "text-zinc-400"}`}>
+                            {d.calls > 0 ? `${closePct.toFixed(1)}%` : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {bestDayName && (
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                {lang === "es"
+                  ? `Mejor día: ${bestDayName}. Dirija los leads frescos y los mejores agentes a los días de mayor rendimiento.`
+                  : `Best day: ${bestDayName}. Route fresh leads and top agents to peak days.`}
+              </p>
+            )}
+          </div>
+        );
+      })()}
     </section>
   );
 }
