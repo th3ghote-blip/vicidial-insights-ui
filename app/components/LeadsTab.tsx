@@ -74,6 +74,128 @@ export default function LeadsTab({
         </div>
       </div>
 
+      {/* Section A: Callback Performance */}
+      {callbackStats && (() => {
+        const showColor = (rate: number) =>
+          rate > 0.65 ? "text-emerald-600 dark:text-emerald-300" : rate > 0.40 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400";
+        const convColor = (rate: number) =>
+          rate > 0.30 ? "text-emerald-600 dark:text-emerald-300" : rate > 0.20 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400";
+        const topAgents = [...(callbackStats.by_agent ?? [])].sort((a, b) => b.set - a.set).slice(0, 8);
+        return (
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 shadow-sm dark:shadow-none space-y-4">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {lang === "es" ? "Rendimiento de callbacks" : "Callback Performance"}
+            </h3>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-3 text-center">
+                <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">
+                  {lang === "es" ? "Total programados" : "Total Scheduled"}
+                </div>
+                <div className="text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">{callbackStats.total_scheduled.toLocaleString()}</div>
+              </div>
+              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-3 text-center">
+                <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">
+                  {lang === "es" ? "% Atendido" : "Show Rate"}
+                </div>
+                <div className={`text-2xl font-semibold tabular-nums ${showColor(callbackStats.show_rate)}`}>{(callbackStats.show_rate * 100).toFixed(1)}%</div>
+              </div>
+              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-3 text-center">
+                <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">
+                  {lang === "es" ? "% Convertido" : "Convert Rate"}
+                </div>
+                <div className={`text-2xl font-semibold tabular-nums ${convColor(callbackStats.convert_rate)}`}>{(callbackStats.convert_rate * 100).toFixed(1)}%</div>
+              </div>
+            </div>
+            {topAgents.length > 0 && (
+              <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
+                <div className="overflow-x-auto no-scrollbar">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-zinc-200 dark:border-zinc-800 text-[10px] uppercase tracking-wider text-zinc-500">
+                        <th className="px-3 py-2.5 text-left">{lang === "es" ? "Agente" : "Agent"}</th>
+                        <th className="px-3 py-2.5 text-right">{lang === "es" ? "Programados" : "Set"}</th>
+                        <th className="px-3 py-2.5 text-right">{lang === "es" ? "Atendió" : "Showed"}</th>
+                        <th className="px-3 py-2.5 text-right">{lang === "es" ? "Convertido" : "Converted"}</th>
+                        <th className="px-3 py-2.5 text-right">{lang === "es" ? "% At." : "Show %"}</th>
+                        <th className="px-3 py-2.5 text-right">{lang === "es" ? "% Conv." : "Conv %"}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+                      {topAgents.map((a, i) => (
+                        <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
+                          <td className="px-3 py-2.5 font-medium text-zinc-800 dark:text-zinc-200">{a.full_name}</td>
+                          <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-300">{a.set}</td>
+                          <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-300">{a.showed}</td>
+                          <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-300">{a.converted}</td>
+                          <td className={`px-3 py-2.5 text-right tabular-nums font-mono ${showColor(a.show_rate)}`}>{(a.show_rate * 100).toFixed(1)}%</td>
+                          <td className={`px-3 py-2.5 text-right tabular-nums font-mono ${convColor(a.convert_rate)}`}>{(a.convert_rate * 100).toFixed(1)}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* Section B: Attempt ROI */}
+      {attemptROI && attemptROI.length > 0 && (() => {
+        const BAR_COLOR: Record<string, string> = {
+          strong:      "#10b981",
+          ok:          "#38bdf8",
+          diminishing: "#f59e0b",
+          stop:        "#f87171",
+        };
+        const bestAttempt = attemptROI.reduce((best, cur) =>
+          cur.conversion_rate > best.conversion_rate ? cur : best, attemptROI[0]);
+        const firstDiminishing = attemptROI.find(a => a.value === "diminishing");
+        const chartData = attemptROI.map(a => ({
+          attempt: a.attempt,
+          rate: Math.round(a.conversion_rate * 1000) / 10,
+          color: BAR_COLOR[a.value] ?? "#a1a1aa",
+          value: a.value,
+        }));
+        const insightDim = firstDiminishing
+          ? (lang === "es"
+            ? `Los intentos ${firstDiminishing.attempt}+ muestran rendimientos decrecientes — considera retirar esos leads.`
+            : `Attempts ${firstDiminishing.attempt}+ show diminishing returns — consider retiring those leads.`)
+          : "";
+        const insight = lang === "es"
+          ? `Mejor ROI en el intento ${bestAttempt.attempt}. ${insightDim}`
+          : `Best ROI on attempt ${bestAttempt.attempt}. ${insightDim}`;
+        return (
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 shadow-sm dark:shadow-none space-y-3">
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {lang === "es" ? "¿Cuándo parar? — ROI por intento" : "When to Stop Calling — Attempt ROI"}
+            </h3>
+            <div className="h-[140px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: -18 }}>
+                  <XAxis dataKey="attempt" tick={{ fontSize: 9, fill: "#a1a1aa" }} tickLine={false} axisLine={false}
+                    tickFormatter={v => `#${v}`} />
+                  <YAxis tick={{ fontSize: 9, fill: "#a1a1aa" }} tickLine={false} axisLine={false}
+                    tickFormatter={v => `${v}%`} domain={[0, "auto"]} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "rgb(24 24 27)", border: "1px solid rgb(63 63 70)", borderRadius: 8, fontSize: 11, color: "#e4e4e7" }}
+                    labelStyle={{ color: "#a1a1aa", marginBottom: 2 }}
+                    formatter={(v) => [`${v}%`, lang === "es" ? "Conversión" : "Conversion"]}
+                    labelFormatter={(v) => `${lang === "es" ? "Intento" : "Attempt"} #${v}`}
+                  />
+                  <Bar dataKey="rate" radius={[3, 3, 0, 0]} maxBarSize={40} isAnimationActive={false}>
+                    {chartData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{insight}</p>
+          </div>
+        );
+      })()}
+
       <div>
         <h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">{tr.leadsHeader}</h2>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
@@ -190,130 +312,6 @@ export default function LeadsTab({
           )}
         </aside>
       </div>
-      {/* Section A: Callback Performance */}
-      {callbackStats && (() => {
-        // show_rate and convert_rate are 0–1 fractions in the type
-        const showColor = (rate: number) =>
-          rate > 0.65 ? "text-emerald-600 dark:text-emerald-300" : rate > 0.40 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400";
-        const convColor = (rate: number) =>
-          rate > 0.30 ? "text-emerald-600 dark:text-emerald-300" : rate > 0.20 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400";
-        const topAgents = [...(callbackStats.by_agent ?? [])].sort((a, b) => b.set - a.set).slice(0, 8);
-        return (
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 shadow-sm dark:shadow-none space-y-4">
-            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              {lang === "es" ? "Rendimiento de callbacks" : "Callback Performance"}
-            </h3>
-            {/* Three stat tiles */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-3 text-center">
-                <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">
-                  {lang === "es" ? "Total programados" : "Total Scheduled"}
-                </div>
-                <div className="text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">{callbackStats.total_scheduled.toLocaleString()}</div>
-              </div>
-              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-3 text-center">
-                <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">
-                  {lang === "es" ? "% Atendido" : "Show Rate"}
-                </div>
-                <div className={`text-2xl font-semibold tabular-nums ${showColor(callbackStats.show_rate)}`}>{(callbackStats.show_rate * 100).toFixed(1)}%</div>
-              </div>
-              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 p-3 text-center">
-                <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-semibold mb-1">
-                  {lang === "es" ? "% Convertido" : "Convert Rate"}
-                </div>
-                <div className={`text-2xl font-semibold tabular-nums ${convColor(callbackStats.convert_rate)}`}>{(callbackStats.convert_rate * 100).toFixed(1)}%</div>
-              </div>
-            </div>
-            {/* Top agents table */}
-            {topAgents.length > 0 && (
-              <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
-                <div className="overflow-x-auto no-scrollbar">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-zinc-200 dark:border-zinc-800 text-[10px] uppercase tracking-wider text-zinc-500">
-                        <th className="px-3 py-2.5 text-left">{lang === "es" ? "Agente" : "Agent"}</th>
-                        <th className="px-3 py-2.5 text-right">{lang === "es" ? "Programados" : "Set"}</th>
-                        <th className="px-3 py-2.5 text-right">{lang === "es" ? "Atendió" : "Showed"}</th>
-                        <th className="px-3 py-2.5 text-right">{lang === "es" ? "Convertido" : "Converted"}</th>
-                        <th className="px-3 py-2.5 text-right">{lang === "es" ? "% At." : "Show %"}</th>
-                        <th className="px-3 py-2.5 text-right">{lang === "es" ? "% Conv." : "Conv %"}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
-                      {topAgents.map((a, i) => (
-                        <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
-                          <td className="px-3 py-2.5 font-medium text-zinc-800 dark:text-zinc-200">{a.full_name}</td>
-                          <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-300">{a.set}</td>
-                          <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-300">{a.showed}</td>
-                          <td className="px-3 py-2.5 text-right tabular-nums text-zinc-700 dark:text-zinc-300">{a.converted}</td>
-                          <td className={`px-3 py-2.5 text-right tabular-nums font-mono ${showColor(a.show_rate)}`}>{(a.show_rate * 100).toFixed(1)}%</td>
-                          <td className={`px-3 py-2.5 text-right tabular-nums font-mono ${convColor(a.convert_rate)}`}>{(a.convert_rate * 100).toFixed(1)}%</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
-      {/* Section B: Attempt ROI */}
-      {attemptROI && attemptROI.length > 0 && (() => {
-        const BAR_COLOR: Record<string, string> = {
-          strong:      "#10b981",
-          ok:          "#38bdf8",
-          diminishing: "#f59e0b",
-          stop:        "#f87171",
-        };
-        const bestAttempt = attemptROI.reduce((best, cur) =>
-          cur.conversion_rate > best.conversion_rate ? cur : best, attemptROI[0]);
-        const firstDiminishing = attemptROI.find(a => a.value === "diminishing");
-        const chartData = attemptROI.map(a => ({
-          attempt: a.attempt,
-          rate: Math.round(a.conversion_rate * 1000) / 10,
-          color: BAR_COLOR[a.value] ?? "#a1a1aa",
-          value: a.value,
-        }));
-        const insightDim = firstDiminishing
-          ? (lang === "es"
-            ? `Los intentos ${firstDiminishing.attempt}+ muestran rendimientos decrecientes — considera retirar esos leads.`
-            : `Attempts ${firstDiminishing.attempt}+ show diminishing returns — consider retiring those leads.`)
-          : "";
-        const insight = lang === "es"
-          ? `Mejor ROI en el intento ${bestAttempt.attempt}. ${insightDim}`
-          : `Best ROI on attempt ${bestAttempt.attempt}. ${insightDim}`;
-        return (
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/40 p-4 shadow-sm dark:shadow-none space-y-3">
-            <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              {lang === "es" ? "¿Cuándo parar? — ROI por intento" : "When to Stop Calling — Attempt ROI"}
-            </h3>
-            <div className="h-[140px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: -18 }}>
-                  <XAxis dataKey="attempt" tick={{ fontSize: 9, fill: "#a1a1aa" }} tickLine={false} axisLine={false}
-                    tickFormatter={v => `#${v}`} />
-                  <YAxis tick={{ fontSize: 9, fill: "#a1a1aa" }} tickLine={false} axisLine={false}
-                    tickFormatter={v => `${v}%`} domain={[0, "auto"]} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "rgb(24 24 27)", border: "1px solid rgb(63 63 70)", borderRadius: 8, fontSize: 11, color: "#e4e4e7" }}
-                    labelStyle={{ color: "#a1a1aa", marginBottom: 2 }}
-                    formatter={(v) => [`${v}%`, lang === "es" ? "Conversión" : "Conversion"]}
-                    labelFormatter={(v) => `${lang === "es" ? "Intento" : "Attempt"} #${v}`}
-                  />
-                  <Bar dataKey="rate" radius={[3, 3, 0, 0]} maxBarSize={40} isAnimationActive={false}>
-                    {chartData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{insight}</p>
-          </div>
-        );
-      })()}
     </section>
   );
 }
